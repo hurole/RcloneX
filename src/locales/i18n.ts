@@ -12,6 +12,7 @@ i18n
     interpolation: {
       escapeValue: false,
     },
+    fallbackLng: ['zh-CN'],
     resources: {
       'en-US': {
         translation: enUS,
