@@ -1,3 +1,3 @@
 # RcloneX
 
-A web UI form Rclone
+A web UI for Rclone.
