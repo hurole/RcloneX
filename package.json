@@ -8,9 +8,11 @@
     "check": "biome check --write",
     "dev": "rsbuild dev --open",
     "format": "biome format --write",
-    "preview": "rsbuild preview"
+    "preview": "rsbuild preview",
+    "start:rclone": "rclone rcd --rc-addr :5572 --rc-user dev --rc-pass 1234 --rc-allow-origin http://localhost:3000"
   },
   "dependencies": {
+    "alova": "^3.2.10",
     "i18next": "^24.2.2",
     "i18next-browser-languagedetector": "^8.0.4",
     "react": "^19.0.0",

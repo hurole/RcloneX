@@ -1,3 +1,7 @@
 {
-  "hello": "你好 i18next"
+  "user": "用户",
+  "password": "密码",
+  "connect": "连接",
+  "connectAuth": "连接认证",
+  "remoteAddress": "远程地址"
 }
