@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "lib": ["DOM", "ES2020"],
     "jsx": "react-jsx",
     "target": "ES2020",
@@ -20,12 +21,12 @@
     "noUnusedParameters": true,
 
     "paths": {
-      "@/*": ["./src/*"],
-      "@pages/*": ["./src/pages/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@components/*": ["./src/components/*"]
+      "@/*": ["src/*"],
+      "@pages/*": ["src/pages/*"],
+      "@utils/*": [".src/utils/*"],
+      "@components/*": ["src/components/*"]
     }
   },
-  
+
   "include": ["src"]
 }
