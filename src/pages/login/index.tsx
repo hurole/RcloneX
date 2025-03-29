@@ -80,7 +80,7 @@ export default function Login() {
                       onChange={(e) => setPass(e.target.value)}
                     />
                   </div>
-                  <Button className="w-full" onClick={onSubmit}>
+                  <Button className="w-full cursor-pointer" onClick={onSubmit}>
                     Connect
                   </Button>
                 </div>
