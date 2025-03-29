@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import appLogo from "@/assets/appIcon.png";
 import { useRequest } from "alova/client";
 import { connect } from "@/services";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { useNavigate } from "react-router";
 
 export default function Login() {
@@ -44,7 +44,7 @@ export default function Login() {
                   <div className="flex flex-col items-center text-center">
                     <h1 className="text-2xl font-bold">Welcome To RcloneX</h1>
                     <p className="text-balance text-muted-foreground">
-                      Login to your Rclone remote control
+                      Login your Rclone using remote control
                     </p>
                   </div>
                   <div className="grid gap-2">
@@ -88,7 +88,6 @@ export default function Login() {
             </CardContent>
           </Card>
         </div>
-        <Toaster position="top-center" richColors />
       </div>
     </div>
   );
