@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import appLogo from "@/assets/appIcon.png";
 import { useRequest } from "alova/client";
-import { connect } from "@/services";
+import { connect } from "./services";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
 

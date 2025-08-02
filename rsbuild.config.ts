@@ -14,7 +14,7 @@ export default defineConfig({
       '@': './src',
       '@pages': './src/pages',
       '@components': './src/components',
-      '@utils': './src/utils'
+      '@utils': './src/shared/utils'
     },
   },
   plugins: [pluginReact()],
