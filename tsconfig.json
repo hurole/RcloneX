@@ -23,6 +23,7 @@
     "paths": {
       "@/*": ["src/*"],
       "@pages/*": ["src/pages/*"],
+      "@utils": ["src/shared/utils"],
       "@utils/*": ["src/shared/utils/*"],
       "@components/*": ["src/components/*"]
     }

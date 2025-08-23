@@ -1,5 +1,5 @@
-import { net } from '@utils';
+import { net } from '@/shared/utils/net';
 
 export const connect = () => {
-  return net.Post('/rc/noop');
+  return net.post({ url: '/rc/noop' });
 };

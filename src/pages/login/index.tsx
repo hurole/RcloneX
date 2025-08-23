@@ -1,29 +1,27 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import appLogo from "@/assets/appIcon.png";
-import { useRequest } from "alova/client";
-import { connect } from "./services";
-import { toast } from "sonner";
-import { useNavigate } from "react-router";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import appLogo from '@/assets/appIcon.png';
+import { connect } from './services';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router';
+import { setLocal } from '@/shared/utils/local';
 
 export default function Login() {
-  const [remote, setRemote] = useState("");
-  const [user, setUser] = useState("");
-  const [pass, setPass] = useState("");
+  const [remote, setRemote] = useState('http://127.0.0.1:5572');
+  const [user, setUser] = useState('dev');
+  const [pass, setPass] = useState('1234');
 
   const navigate = useNavigate();
 
-  const { send } = useRequest(connect, {
-    immediate: false,
-  });
-
   const onSubmit = async () => {
-    await send(remote, user, pass);
-    toast.success("连接成功");
-    navigate("/");
+    setLocal(remote, user, pass);
+    const result = await connect();
+    console.log('result', result);
+    toast.success('连接成功');
+    navigate('/');
   };
 
   return (
@@ -35,7 +33,7 @@ export default function Login() {
               <div className="hidden bg-muted md:flex justify-center items-center">
                 <img
                   src={appLogo}
-                  alt="Image"
+                  alt="logo"
                   className="inset-0 h-1/2 w-auto dark:brightness-[0.2] dark:grayscale"
                 />
               </div>
