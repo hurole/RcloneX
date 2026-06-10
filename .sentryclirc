@@ -1,0 +1,13 @@
+[defaults]
+# 1. 你的自建 GlitchTip 服务基础地址（只需要写到域名和端口即可）
+url = http://192.168.1.10:8000
+
+# 2. 你的组织（Organization）Slug 标识
+org = foka
+
+# 3. 你的项目（Project）Slug 标识
+project = minici
+
+[auth]
+# 4. 你的 API 访问令牌
+token = a16ad91235398cda91dcddf95bb9e7ddb64a7a9dff4b955b1d9ca6d0018c2a03
