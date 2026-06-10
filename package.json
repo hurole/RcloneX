@@ -10,7 +10,7 @@
     "format": "biome format --write",
     "preview": "rsbuild preview",
     "start:rclone": "rclone rcd --rc-addr :5572 --rc-user dev --rc-pass 1234 --rc-allow-origin http://localhost:3000",
-    "sentry": "sentry-cli sourcemaps upload ./dist --release $(node -p \"require('./package.json').version\")"
+    "sentry": "sentry-cli sourcemaps upload ./dist --release $(node -p \"require('./package.json').version\") --url-prefix ~/"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
