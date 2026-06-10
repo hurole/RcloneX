@@ -34,7 +34,7 @@ export const getAllConfigs = async (): Promise<RcloneConfig[]> => {
     // 使用 config/listremotes 接口获取配置列表
     const response = await net.post<{ remotes: string[] }>({
       url: '/config/listremotes',
-      data: {}
+      data: {},
     });
 
     console.log('listremotes API 响应:', response);
@@ -63,7 +63,7 @@ export const getAllConfigs = async (): Promise<RcloneConfig[]> => {
           id: remoteName,
           name: remoteName,
           type: 'unknown',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
         };
         configs.push(basicConfig);
         console.log(`使用基本信息作为配置 ${remoteName}:`, basicConfig);
@@ -78,9 +78,11 @@ export const getAllConfigs = async (): Promise<RcloneConfig[]> => {
     // 如果 listremotes 失败，尝试使用 config/dump 作为备用方案
     console.log('尝试使用 config/dump 作为备用方案...');
     try {
-      const dumpResponse = await net.post<RcloneApiResponse<RcloneConfigResponse>>({
+      const dumpResponse = await net.post<
+        RcloneApiResponse<RcloneConfigResponse>
+      >({
         url: '/config/dump',
-        data: {}
+        data: {},
       });
 
       if (dumpResponse.error) {
@@ -99,7 +101,7 @@ export const getAllConfigs = async (): Promise<RcloneConfig[]> => {
           name: configName,
           type: configDetails.type,
           createdAt: new Date().toISOString(),
-          config: configDetails
+          config: configDetails,
         };
         configs.push(config);
       }
@@ -108,7 +110,9 @@ export const getAllConfigs = async (): Promise<RcloneConfig[]> => {
       return configs;
     } catch (dumpError) {
       console.error('config/dump 也失败:', dumpError);
-      throw new Error(`无法获取配置列表: ${error instanceof Error ? error.message : '未知错误'}`);
+      throw new Error(
+        `无法获取配置列表: ${error instanceof Error ? error.message : '未知错误'}`,
+      );
     }
   }
 };
@@ -116,7 +120,9 @@ export const getAllConfigs = async (): Promise<RcloneConfig[]> => {
 /**
  * 获取单个配置详情
  */
-export const getConfigDetails = async (configName: string): Promise<RcloneConfig | null> => {
+export const getConfigDetails = async (
+  configName: string,
+): Promise<RcloneConfig | null> => {
   try {
     console.log(`开始获取配置 ${configName} 的详情...`);
 
@@ -124,8 +130,8 @@ export const getConfigDetails = async (configName: string): Promise<RcloneConfig
     const response = await net.post<{ [key: string]: unknown }>({
       url: '/config/get',
       data: {
-        name: configName
-      }
+        name: configName,
+      },
     });
 
     console.log(`config/get API 响应 (${configName}):`, response);
@@ -145,7 +151,7 @@ export const getConfigDetails = async (configName: string): Promise<RcloneConfig
       name: configName,
       type: type,
       createdAt: new Date().toISOString(),
-      config: response
+      config: response,
     };
 
     console.log(`成功创建配置对象 ${configName}:`, config);
@@ -158,7 +164,7 @@ export const getConfigDetails = async (configName: string): Promise<RcloneConfig
       id: configName,
       name: configName,
       type: 'unknown',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     console.log(`使用基本配置对象 ${configName}:`, basicConfig);
@@ -174,8 +180,8 @@ export const getConfigOptions = async (type: string): Promise<unknown> => {
     const response = await net.post<RcloneApiResponse>({
       url: '/config/get',
       data: {
-        type
-      }
+        type,
+      },
     });
 
     if (response.error) {
@@ -195,7 +201,7 @@ export const getConfigOptions = async (type: string): Promise<unknown> => {
 export const createConfig = async (
   name: string,
   type: string,
-  parameters: Record<string, unknown> = {}
+  parameters: Record<string, unknown> = {},
 ): Promise<void> => {
   try {
     const response = await net.post<RcloneApiResponse>({
@@ -203,8 +209,8 @@ export const createConfig = async (
       data: {
         name,
         type,
-        parameters
-      }
+        parameters,
+      },
     });
 
     if (response.error) {
@@ -221,15 +227,15 @@ export const createConfig = async (
  */
 export const updateConfig = async (
   name: string,
-  parameters: Record<string, unknown>
+  parameters: Record<string, unknown>,
 ): Promise<void> => {
   try {
     const response = await net.post<RcloneApiResponse>({
       url: '/config/update',
       data: {
         name,
-        parameters
-      }
+        parameters,
+      },
     });
 
     if (response.error) {
@@ -249,8 +255,8 @@ export const deleteConfig = async (name: string): Promise<void> => {
     const response = await net.post<RcloneApiResponse>({
       url: '/config/delete',
       data: {
-        name
-      }
+        name,
+      },
     });
 
     if (response.error) {
@@ -265,11 +271,15 @@ export const deleteConfig = async (name: string): Promise<void> => {
 /**
  * 获取配置提供商列表（用于创建配置时选择类型）
  */
-export const getConfigProviders = async (): Promise<{ [key: string]: unknown }> => {
+export const getConfigProviders = async (): Promise<{
+  [key: string]: unknown;
+}> => {
   try {
-    const response = await net.post<RcloneApiResponse<{ [key: string]: unknown }>>({
+    const response = await net.post<
+      RcloneApiResponse<{ [key: string]: unknown }>
+    >({
       url: '/config/providers',
-      data: {}
+      data: {},
     });
 
     if (response.error) {
@@ -291,8 +301,8 @@ export const testConfig = async (name: string): Promise<boolean> => {
     const response = await net.post<RcloneApiResponse>({
       url: '/operations/about',
       data: {
-        fs: `${name}:`
-      }
+        fs: `${name}:`,
+      },
     });
 
     return !response.error;

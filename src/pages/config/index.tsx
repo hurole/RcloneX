@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  useRef,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Search,
@@ -78,62 +84,198 @@ const CONFIG_TYPES = [
 ];
 
 // 配置参数模板
-const CONFIG_PARAMETER_TEMPLATES: Record<string, Array<{
-  key: string;
-  label: string;
-  type: 'text' | 'password' | 'select' | 'number';
-  required: boolean;
-  placeholder?: string;
-  defaultValue?: string;
-  options?: Array<{ value: string; label: string }>;
-}>> = {
+const CONFIG_PARAMETER_TEMPLATES: Record<
+  string,
+  Array<{
+    key: string;
+    label: string;
+    type: 'text' | 'password' | 'select' | 'number';
+    required: boolean;
+    placeholder?: string;
+    defaultValue?: string;
+    options?: Array<{ value: string; label: string }>;
+  }>
+> = {
   webdav: [
-    { key: 'url', label: 'WebDAV 服务器地址', type: 'text', required: true, placeholder: 'https://example.com/webdav 或 https://example.com/dav' },
-    { key: 'vendor', label: '服务商类型', type: 'select', required: false, defaultValue: 'other', options: [
-      { value: 'other', label: '其他' },
-      { value: 'nextcloud', label: 'Nextcloud' },
-      { value: 'owncloud', label: 'OwnCloud' },
-      { value: 'sharepoint', label: 'SharePoint' },
-      { value: 'fastmail', label: 'Fastmail' }
-    ]},
-    { key: 'user', label: '用户名', type: 'text', required: true, placeholder: '输入您的用户名' },
-    { key: 'pass', label: '密码', type: 'password', required: true, placeholder: '输入您的密码' },
-    { key: 'bearer_token', label: 'Bearer Token', type: 'password', required: false, placeholder: '可选：使用 Bearer Token 代替用户名密码' }
+    {
+      key: 'url',
+      label: 'WebDAV 服务器地址',
+      type: 'text',
+      required: true,
+      placeholder: 'https://example.com/webdav 或 https://example.com/dav',
+    },
+    {
+      key: 'vendor',
+      label: '服务商类型',
+      type: 'select',
+      required: false,
+      defaultValue: 'other',
+      options: [
+        { value: 'other', label: '其他' },
+        { value: 'nextcloud', label: 'Nextcloud' },
+        { value: 'owncloud', label: 'OwnCloud' },
+        { value: 'sharepoint', label: 'SharePoint' },
+        { value: 'fastmail', label: 'Fastmail' },
+      ],
+    },
+    {
+      key: 'user',
+      label: '用户名',
+      type: 'text',
+      required: true,
+      placeholder: '输入您的用户名',
+    },
+    {
+      key: 'pass',
+      label: '密码',
+      type: 'password',
+      required: true,
+      placeholder: '输入您的密码',
+    },
+    {
+      key: 'bearer_token',
+      label: 'Bearer Token',
+      type: 'password',
+      required: false,
+      placeholder: '可选：使用 Bearer Token 代替用户名密码',
+    },
   ],
   ftp: [
-    { key: 'host', label: 'FTP Host', type: 'text', required: true, placeholder: 'ftp.example.com' },
-    { key: 'user', label: 'Username', type: 'text', required: false, placeholder: '用户名', defaultValue: 'anonymous' },
-    { key: 'pass', label: 'Password', type: 'password', required: false, placeholder: '密码' },
-    { key: 'port', label: 'Port', type: 'number', required: false, placeholder: '21', defaultValue: '21' }
+    {
+      key: 'host',
+      label: 'FTP Host',
+      type: 'text',
+      required: true,
+      placeholder: 'ftp.example.com',
+    },
+    {
+      key: 'user',
+      label: 'Username',
+      type: 'text',
+      required: false,
+      placeholder: '用户名',
+      defaultValue: 'anonymous',
+    },
+    {
+      key: 'pass',
+      label: 'Password',
+      type: 'password',
+      required: false,
+      placeholder: '密码',
+    },
+    {
+      key: 'port',
+      label: 'Port',
+      type: 'number',
+      required: false,
+      placeholder: '21',
+      defaultValue: '21',
+    },
   ],
   sftp: [
-    { key: 'host', label: 'SFTP Host', type: 'text', required: true, placeholder: 'sftp.example.com' },
-    { key: 'user', label: 'Username', type: 'text', required: true, placeholder: '用户名' },
-    { key: 'pass', label: 'Password', type: 'password', required: false, placeholder: '密码（可选）' },
-    { key: 'port', label: 'Port', type: 'number', required: false, placeholder: '22', defaultValue: '22' },
-    { key: 'key_file', label: 'Private Key File', type: 'text', required: false, placeholder: '私钥文件路径（可选）' }
+    {
+      key: 'host',
+      label: 'SFTP Host',
+      type: 'text',
+      required: true,
+      placeholder: 'sftp.example.com',
+    },
+    {
+      key: 'user',
+      label: 'Username',
+      type: 'text',
+      required: true,
+      placeholder: '用户名',
+    },
+    {
+      key: 'pass',
+      label: 'Password',
+      type: 'password',
+      required: false,
+      placeholder: '密码（可选）',
+    },
+    {
+      key: 'port',
+      label: 'Port',
+      type: 'number',
+      required: false,
+      placeholder: '22',
+      defaultValue: '22',
+    },
+    {
+      key: 'key_file',
+      label: 'Private Key File',
+      type: 'text',
+      required: false,
+      placeholder: '私钥文件路径（可选）',
+    },
   ],
   s3: [
-    { key: 'provider', label: 'S3 Provider', type: 'select', required: true, defaultValue: 'AWS', options: [
-      { value: 'AWS', label: 'Amazon S3' },
-      { value: 'Alibaba', label: 'Alibaba Cloud OSS' },
-      { value: 'Minio', label: 'MinIO' },
-      { value: 'DigitalOcean', label: 'DigitalOcean Spaces' }
-    ]},
-    { key: 'access_key_id', label: 'Access Key ID', type: 'text', required: true, placeholder: 'Access Key ID' },
-    { key: 'secret_access_key', label: 'Secret Access Key', type: 'password', required: true, placeholder: 'Secret Access Key' },
-    { key: 'region', label: 'Region', type: 'text', required: false, placeholder: 'us-east-1', defaultValue: 'us-east-1' },
-    { key: 'endpoint', label: 'Endpoint', type: 'text', required: false, placeholder: '自定义端点（可选）' }
+    {
+      key: 'provider',
+      label: 'S3 Provider',
+      type: 'select',
+      required: true,
+      defaultValue: 'AWS',
+      options: [
+        { value: 'AWS', label: 'Amazon S3' },
+        { value: 'Alibaba', label: 'Alibaba Cloud OSS' },
+        { value: 'Minio', label: 'MinIO' },
+        { value: 'DigitalOcean', label: 'DigitalOcean Spaces' },
+      ],
+    },
+    {
+      key: 'access_key_id',
+      label: 'Access Key ID',
+      type: 'text',
+      required: true,
+      placeholder: 'Access Key ID',
+    },
+    {
+      key: 'secret_access_key',
+      label: 'Secret Access Key',
+      type: 'password',
+      required: true,
+      placeholder: 'Secret Access Key',
+    },
+    {
+      key: 'region',
+      label: 'Region',
+      type: 'text',
+      required: false,
+      placeholder: 'us-east-1',
+      defaultValue: 'us-east-1',
+    },
+    {
+      key: 'endpoint',
+      label: 'Endpoint',
+      type: 'text',
+      required: false,
+      placeholder: '自定义端点（可选）',
+    },
   ],
   drive: [
-    { key: 'scope', label: 'Scope', type: 'select', required: false, defaultValue: 'drive', options: [
-      { value: 'drive', label: 'Full access' },
-      { value: 'drive.readonly', label: 'Read-only access' },
-      { value: 'drive.file', label: 'File access only' }
-    ]}
+    {
+      key: 'scope',
+      label: 'Scope',
+      type: 'select',
+      required: false,
+      defaultValue: 'drive',
+      options: [
+        { value: 'drive', label: 'Full access' },
+        { value: 'drive.readonly', label: 'Read-only access' },
+        { value: 'drive.file', label: 'File access only' },
+      ],
+    },
   ],
   http: [
-    { key: 'url', label: 'Base URL', type: 'text', required: true, placeholder: 'https://example.com' }
+    {
+      key: 'url',
+      label: 'Base URL',
+      type: 'text',
+      required: true,
+      placeholder: 'https://example.com',
+    },
   ],
   local: [
     // Local 类型不需要额外参数
@@ -146,7 +288,7 @@ const CONFIG_PARAMETER_TEMPLATES: Record<string, Array<{
   ],
   box: [
     // Box 需要 OAuth授权，暂时不支持参数输入
-  ]
+  ],
 };
 
 export default function Configs() {
@@ -157,8 +299,14 @@ export default function Configs() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedConfig, setSelectedConfig] = useState<RcloneConfig | null>(null);
-  const [formData, setFormData] = useState<ConfigFormData>({ name: '', type: '', parameters: {} });
+  const [selectedConfig, setSelectedConfig] = useState<RcloneConfig | null>(
+    null,
+  );
+  const [formData, setFormData] = useState<ConfigFormData>({
+    name: '',
+    type: '',
+    parameters: {},
+  });
   const [submitting, setSubmitting] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
@@ -190,7 +338,9 @@ export default function Configs() {
       }
     } catch (error) {
       console.error('获取配置失败:', error);
-      toast.error(`获取配置列表失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      toast.error(
+        `获取配置列表失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      );
     } finally {
       setLoading(false);
       isLoadingRef.current = false;
@@ -208,7 +358,7 @@ export default function Configs() {
     const filtered = configs.filter(
       (config) =>
         config.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        config.type.toLowerCase().includes(searchTerm.toLowerCase())
+        config.type.toLowerCase().includes(searchTerm.toLowerCase()),
     );
     return filtered;
   }, [configs, searchTerm]);
@@ -226,17 +376,23 @@ export default function Configs() {
   };
 
   // 获取配置的关键信息
-  const getConfigKeyInfo = (config: RcloneConfig): Array<{key: string, value: string, title?: string}> => {
+  const getConfigKeyInfo = (
+    config: RcloneConfig,
+  ): Array<{ key: string; value: string; title?: string }> => {
     if (!config.config) return [];
 
     const configData = config.config as Record<string, unknown>;
-    const keyInfo: Array<{key: string, value: string, title?: string}> = [];
+    const keyInfo: Array<{ key: string; value: string; title?: string }> = [];
 
     // 根据不同类型显示不同的关键信息
     switch (config.type.toLowerCase()) {
       case 'webdav':
         if (configData.url) {
-          keyInfo.push({ key: 'URL', value: String(configData.url), title: String(configData.url) });
+          keyInfo.push({
+            key: 'URL',
+            value: String(configData.url),
+            title: String(configData.url),
+          });
         }
         if (configData.vendor) {
           keyInfo.push({ key: 'Vendor', value: String(configData.vendor) });
@@ -246,7 +402,11 @@ export default function Configs() {
       case 'ftp':
       case 'sftp':
         if (configData.host) {
-          keyInfo.push({ key: 'Host', value: String(configData.host), title: String(configData.host) });
+          keyInfo.push({
+            key: 'Host',
+            value: String(configData.host),
+            title: String(configData.host),
+          });
         }
         if (configData.user) {
           keyInfo.push({ key: 'User', value: String(configData.user) });
@@ -273,20 +433,36 @@ export default function Configs() {
 
       case 'http':
         if (configData.url) {
-          keyInfo.push({ key: 'URL', value: String(configData.url), title: String(configData.url) });
+          keyInfo.push({
+            key: 'URL',
+            value: String(configData.url),
+            title: String(configData.url),
+          });
         }
         break;
 
       default:
         // 对于未知类型，显示一些通用字段
         if (configData.url) {
-          keyInfo.push({ key: 'URL', value: String(configData.url), title: String(configData.url) });
+          keyInfo.push({
+            key: 'URL',
+            value: String(configData.url),
+            title: String(configData.url),
+          });
         }
         if (configData.host) {
-          keyInfo.push({ key: 'Host', value: String(configData.host), title: String(configData.host) });
+          keyInfo.push({
+            key: 'Host',
+            value: String(configData.host),
+            title: String(configData.host),
+          });
         }
         if (configData.endpoint) {
-          keyInfo.push({ key: 'Endpoint', value: String(configData.endpoint), title: String(configData.endpoint) });
+          keyInfo.push({
+            key: 'Endpoint',
+            value: String(configData.endpoint),
+            title: String(configData.endpoint),
+          });
         }
         break;
     }
@@ -327,7 +503,10 @@ export default function Configs() {
     for (const key of Object.keys(existingParams)) {
       if (typeof existingParams[key] === 'string') {
         parameters[key] = existingParams[key] as string;
-      } else if (existingParams[key] !== null && existingParams[key] !== undefined) {
+      } else if (
+        existingParams[key] !== null &&
+        existingParams[key] !== undefined
+      ) {
         parameters[key] = String(existingParams[key]);
       }
     }
@@ -335,7 +514,7 @@ export default function Configs() {
     setFormData({
       name: config.name,
       type: config.type,
-      parameters
+      parameters,
     });
     setIsEditDialogOpen(true);
   };
@@ -348,12 +527,12 @@ export default function Configs() {
 
   // 处理参数变化
   const handleParameterChange = (key: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       parameters: {
         ...prev.parameters,
-        [key]: value
-      }
+        [key]: value,
+      },
     }));
   };
 
@@ -379,10 +558,10 @@ export default function Configs() {
   // 处理配置类型变化
   const handleTypeChange = (type: string) => {
     const defaultParams = initializeDefaultParameters(type);
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       type,
-      parameters: defaultParams
+      parameters: defaultParams,
     }));
   };
 
@@ -413,7 +592,10 @@ export default function Configs() {
     try {
       if (selectedConfig) {
         // 编辑配置（注意：rclone 不支持修改名称和类型，只能更新参数）
-        if (selectedConfig.name !== formData.name || selectedConfig.type !== formData.type) {
+        if (
+          selectedConfig.name !== formData.name ||
+          selectedConfig.type !== formData.type
+        ) {
           toast.error('无法修改配置名称和类型，请删除后重新创建');
           return;
         }
@@ -435,7 +617,11 @@ export default function Configs() {
     } catch (error) {
       console.error('保存配置失败:', error);
       const errorMessage = error instanceof Error ? error.message : '未知错误';
-      toast.error(selectedConfig ? `更新配置失败: ${errorMessage}` : `创建配置失败: ${errorMessage}`);
+      toast.error(
+        selectedConfig
+          ? `更新配置失败: ${errorMessage}`
+          : `创建配置失败: ${errorMessage}`,
+      );
     } finally {
       setSubmitting(false);
     }
@@ -467,7 +653,9 @@ export default function Configs() {
       {/* 页面标题和操作栏 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('Configuration Management')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t('Configuration Management')}
+          </h1>
           <p className="text-muted-foreground mt-2">
             管理您的 Rclone 远程存储配置
           </p>
@@ -508,22 +696,25 @@ export default function Configs() {
           {Array.from({ length: 6 }, () => {
             const skeletonId = Math.random().toString(36).substr(2, 9);
             return (
-              <Card key={`loading-skeleton-${skeletonId}`} className="animate-pulse">
-              <CardHeader>
-                <div className="flex items-center space-x-3">
-                  <div className="w-9 h-9 bg-muted rounded-lg" />
-                  <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-muted rounded w-3/4" />
-                    <div className="h-3 bg-muted rounded w-1/2" />
+              <Card
+                key={`loading-skeleton-${skeletonId}`}
+                className="animate-pulse"
+              >
+                <CardHeader>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-9 h-9 bg-muted rounded-lg" />
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                      <div className="h-3 bg-muted rounded w-1/2" />
+                    </div>
                   </div>
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="h-3 bg-muted rounded" />
-                  <div className="h-3 bg-muted rounded w-4/5" />
-                  <div className="h-3 bg-muted rounded w-3/5" />
-                </div>
-              </CardHeader>
-            </Card>
+                  <div className="mt-4 space-y-2">
+                    <div className="h-3 bg-muted rounded" />
+                    <div className="h-3 bg-muted rounded w-4/5" />
+                    <div className="h-3 bg-muted rounded w-3/5" />
+                  </div>
+                </CardHeader>
+              </Card>
             );
           })}
         </div>
@@ -532,7 +723,10 @@ export default function Configs() {
           {filteredConfigs.map((config) => {
             const IconComponent = getConfigTypeIcon(config.type);
             return (
-              <Card key={config.id} className="group relative transition-all duration-200 hover:shadow-lg">
+              <Card
+                key={config.id}
+                className="group relative transition-all duration-200 hover:shadow-lg"
+              >
                 {/* 右上角设置按钮 */}
                 <div className="absolute top-4 right-4 z-10">
                   <DropdownMenu
@@ -543,7 +737,11 @@ export default function Configs() {
                     }}
                   >
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
                         <Settings className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -579,7 +777,9 @@ export default function Configs() {
                         <IconComponent className="h-5 w-5 text-primary" />
                       </div>
                       <div className="space-y-1">
-                        <CardTitle className="text-lg leading-none">{config.name}</CardTitle>
+                        <CardTitle className="text-lg leading-none">
+                          {config.name}
+                        </CardTitle>
                         <CardDescription>
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                             {getConfigTypeLabel(config.type)}
@@ -595,7 +795,10 @@ export default function Configs() {
                     {getConfigKeyInfo(config).map(({ key, value, title }) => (
                       <div key={key} className="flex justify-between">
                         <span>{key}:</span>
-                        <span className="truncate max-w-[200px]" title={title || value}>
+                        <span
+                          className="truncate max-w-[200px]"
+                          title={title || value}
+                        >
                           {value}
                         </span>
                       </div>
@@ -612,8 +815,6 @@ export default function Configs() {
                         <span>{formatDate(config.lastUsed)}</span>
                       </div>
                     )}
-
-
                   </div>
                 </CardHeader>
               </Card>
@@ -632,7 +833,11 @@ export default function Configs() {
               : t('Click the button above to add your first configuration.')}
           </p>
           {!searchTerm && (
-            <Button onClick={handleAddConfig} variant="outline" className="gap-2">
+            <Button
+              onClick={handleAddConfig}
+              variant="outline"
+              className="gap-2"
+            >
               <Plus className="h-4 w-4" />
               {t('Add Configuration')}
             </Button>
@@ -641,13 +846,16 @@ export default function Configs() {
       )}
 
       {/* 添加配置对话框 */}
-      <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-        if (!open) {
-          handleCancelAdd();
-        } else {
-          setIsAddDialogOpen(true);
-        }
-      }}>
+      <Dialog
+        open={isAddDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCancelAdd();
+          } else {
+            setIsAddDialogOpen(true);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('Add Configuration')}</DialogTitle>
@@ -661,7 +869,9 @@ export default function Configs() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="输入配置名称"
               />
             </div>
@@ -693,19 +903,30 @@ export default function Configs() {
                     <div key={param.key} className="grid gap-2 mb-3">
                       <Label htmlFor={`param-${param.key}`}>
                         {param.label}
-                        {param.required && <span className="text-red-500 ml-1">*</span>}
+                        {param.required && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
                       </Label>
                       {param.type === 'select' ? (
                         <Select
-                          value={formData.parameters[param.key] || param.defaultValue || ''}
-                          onValueChange={(value: string) => handleParameterChange(param.key, value)}
+                          value={
+                            formData.parameters[param.key] ||
+                            param.defaultValue ||
+                            ''
+                          }
+                          onValueChange={(value: string) =>
+                            handleParameterChange(param.key, value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder={`选择 ${param.label}`} />
                           </SelectTrigger>
                           <SelectContent>
                             {param.options?.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -714,9 +935,17 @@ export default function Configs() {
                       ) : (
                         <Input
                           id={`param-${param.key}`}
-                          type={param.type === 'password' ? 'password' : param.type === 'number' ? 'number' : 'text'}
+                          type={
+                            param.type === 'password'
+                              ? 'password'
+                              : param.type === 'number'
+                                ? 'number'
+                                : 'text'
+                          }
                           value={formData.parameters[param.key] || ''}
-                          onChange={(e) => handleParameterChange(param.key, e.target.value)}
+                          onChange={(e) =>
+                            handleParameterChange(param.key, e.target.value)
+                          }
                           placeholder={param.placeholder}
                           required={param.required}
                         />
@@ -728,16 +957,23 @@ export default function Configs() {
             )}
 
             {/* OAuth 类型的提示 */}
-            {formData.type && ['drive', 'dropbox', 'onedrive', 'box'].includes(formData.type) && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  此类型需要 OAuth 授权，配置创建后将引导您完成授权流程。
-                </p>
-              </div>
-            )}
+            {formData.type &&
+              ['drive', 'dropbox', 'onedrive', 'box'].includes(
+                formData.type,
+              ) && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    此类型需要 OAuth 授权，配置创建后将引导您完成授权流程。
+                  </p>
+                </div>
+              )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancelAdd} disabled={submitting}>
+            <Button
+              variant="outline"
+              onClick={handleCancelAdd}
+              disabled={submitting}
+            >
               {t('Cancel')}
             </Button>
             <Button
@@ -758,13 +994,16 @@ export default function Configs() {
       </Dialog>
 
       {/* 编辑配置对话框 */}
-      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
-        if (!open) {
-          handleCancelEdit();
-        } else {
-          setIsEditDialogOpen(true);
-        }
-      }}>
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCancelEdit();
+          } else {
+            setIsEditDialogOpen(true);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('Edit Configuration')}</DialogTitle>
@@ -778,7 +1017,9 @@ export default function Configs() {
               <Input
                 id="edit-name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="输入配置名称"
                 disabled={true}
               />
@@ -788,7 +1029,11 @@ export default function Configs() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-type">{t('Configuration Type')}</Label>
-              <Select value={formData.type} onValueChange={handleTypeChange} disabled={true}>
+              <Select
+                value={formData.type}
+                onValueChange={handleTypeChange}
+                disabled={true}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="选择配置类型" />
                 </SelectTrigger>
@@ -817,19 +1062,30 @@ export default function Configs() {
                     <div key={param.key} className="grid gap-2 mb-3">
                       <Label htmlFor={`edit-param-${param.key}`}>
                         {param.label}
-                        {param.required && <span className="text-red-500 ml-1">*</span>}
+                        {param.required && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
                       </Label>
                       {param.type === 'select' ? (
                         <Select
-                          value={formData.parameters[param.key] || param.defaultValue || ''}
-                          onValueChange={(value: string) => handleParameterChange(param.key, value)}
+                          value={
+                            formData.parameters[param.key] ||
+                            param.defaultValue ||
+                            ''
+                          }
+                          onValueChange={(value: string) =>
+                            handleParameterChange(param.key, value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder={`选择 ${param.label}`} />
                           </SelectTrigger>
                           <SelectContent>
                             {param.options?.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -838,9 +1094,17 @@ export default function Configs() {
                       ) : (
                         <Input
                           id={`edit-param-${param.key}`}
-                          type={param.type === 'password' ? 'password' : param.type === 'number' ? 'number' : 'text'}
+                          type={
+                            param.type === 'password'
+                              ? 'password'
+                              : param.type === 'number'
+                                ? 'number'
+                                : 'text'
+                          }
                           value={formData.parameters[param.key] || ''}
-                          onChange={(e) => handleParameterChange(param.key, e.target.value)}
+                          onChange={(e) =>
+                            handleParameterChange(param.key, e.target.value)
+                          }
                           placeholder={param.placeholder}
                           required={param.required}
                         />
@@ -852,7 +1116,11 @@ export default function Configs() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancelEdit} disabled={submitting}>
+            <Button
+              variant="outline"
+              onClick={handleCancelEdit}
+              disabled={submitting}
+            >
               {t('Cancel')}
             </Button>
             <Button
@@ -873,13 +1141,16 @@ export default function Configs() {
       </Dialog>
 
       {/* 删除确认对话框 */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => {
-        if (!open) {
-          handleCancelDelete();
-        } else {
-          setIsDeleteDialogOpen(true);
-        }
-      }}>
+      <Dialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCancelDelete();
+          } else {
+            setIsDeleteDialogOpen(true);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{t('Delete Configuration')}</DialogTitle>
@@ -908,10 +1179,18 @@ export default function Configs() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancelDelete} disabled={submitting}>
+            <Button
+              variant="outline"
+              onClick={handleCancelDelete}
+              disabled={submitting}
+            >
               {t('Cancel')}
             </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete} disabled={submitting}>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={submitting}
+            >
               {submitting ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
