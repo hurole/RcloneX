@@ -48,5 +48,12 @@
   "Full access": "Full access",
   "Read-only access": "Read-only access",
   "File access only": "File access only",
-  "Fastmail": "Fastmail"
+  "Fastmail": "Fastmail",
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try reloading the page.",
+    "reload": "Reload Page",
+    "reportError": "Report Error",
+    "backToHome": "Back to Home"
+  }
 }
