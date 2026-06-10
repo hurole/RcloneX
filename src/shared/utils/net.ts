@@ -1,4 +1,9 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type AxiosError } from "axios";
+import axios, {
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+  type AxiosError,
+} from 'axios';
 
 /**
  * RcloneX 网络请求客户端类
@@ -19,7 +24,7 @@ class NetworkClient {
     return axios.create({
       timeout: this.timeout,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
   }
@@ -41,7 +46,7 @@ class NetworkClient {
         this.setAuthenticationHeaders(config);
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
   }
 
@@ -54,7 +59,7 @@ class NetworkClient {
       (error) => {
         this.handleResponseError(error);
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -67,7 +72,7 @@ class NetworkClient {
 
     if (!rc || !token) {
       this.redirectToLogin();
-      throw new Error("Missing rclone-rc or rclone-token");
+      throw new Error('Missing rclone-rc or rclone-token');
     }
 
     config.baseURL = rc;
@@ -89,65 +94,80 @@ class NetworkClient {
    * 获取 Rclone RC 地址
    */
   private getRcloneRC(): string | null {
-    return localStorage.getItem("rclone-rc");
+    return localStorage.getItem('rclone-rc');
   }
 
   /**
    * 获取 Rclone Token
    */
   private getRcloneToken(): string | null {
-    return localStorage.getItem("rclone-token");
+    return localStorage.getItem('rclone-token');
   }
 
   /**
    * 清除认证数据
    */
   private clearAuthData(): void {
-    localStorage.removeItem("rclone-rc");
-    localStorage.removeItem("rclone-token");
+    localStorage.removeItem('rclone-rc');
+    localStorage.removeItem('rclone-token');
   }
 
   /**
    * 跳转到登录页
    */
   private redirectToLogin(): void {
-    location.href = "/login";
+    location.href = '/login';
   }
 
   /**
    * GET 请求
    */
   async get<T = unknown>(config: AxiosRequestConfig): Promise<T> {
-    return this.axiosInstance.request({ method: 'GET', ...config }) as Promise<T>;
+    return this.axiosInstance.request({
+      method: 'GET',
+      ...config,
+    }) as Promise<T>;
   }
 
   /**
    * POST 请求
    */
   async post<T = unknown>(config: AxiosRequestConfig): Promise<T> {
-    console.log('post', config)
-    return this.axiosInstance.request({ method: 'POST', ...config }) as Promise<T>;
+    console.log('post', config);
+    return this.axiosInstance.request({
+      method: 'POST',
+      ...config,
+    }) as Promise<T>;
   }
 
   /**
    * PUT 请求
    */
   async put<T = unknown>(config: AxiosRequestConfig): Promise<T> {
-    return this.axiosInstance.request({ method: 'PUT', ...config }) as Promise<T>;
+    return this.axiosInstance.request({
+      method: 'PUT',
+      ...config,
+    }) as Promise<T>;
   }
 
   /**
    * DELETE 请求
    */
   async delete<T = unknown>(config: AxiosRequestConfig): Promise<T> {
-    return this.axiosInstance.request({ method: 'DELETE', ...config }) as Promise<T>;
+    return this.axiosInstance.request({
+      method: 'DELETE',
+      ...config,
+    }) as Promise<T>;
   }
 
   /**
    * PATCH 请求
    */
   async patch<T = unknown>(config: AxiosRequestConfig): Promise<T> {
-    return this.axiosInstance.request({ method: 'PATCH', ...config }) as Promise<T>;
+    return this.axiosInstance.request({
+      method: 'PATCH',
+      ...config,
+    }) as Promise<T>;
   }
 
   /**

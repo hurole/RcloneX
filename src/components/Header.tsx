@@ -1,9 +1,9 @@
-import { LogOut, User } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
-import { useState } from "react";
+import { LogOut, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { useState } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,9 +11,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useUser } from "@/hooks/use-user";
+} from '@/components/ui/dropdown-menu';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useUser } from '@/hooks/use-user';
 
 interface HeaderProps {
   className?: string;
@@ -30,19 +30,19 @@ export function Header({ className }: HeaderProps) {
     clearUser();
 
     // 清除本地存储的认证信息
-    localStorage.removeItem("rclone-rc");
-    localStorage.removeItem("rclone-token");
+    localStorage.removeItem('rclone-rc');
+    localStorage.removeItem('rclone-token');
 
     // 跳转到登录页
-    navigate("/login");
+    navigate('/login');
   };
 
   // 获取用户名的首字母作为头像fallback
   const getUserInitials = (name: string) => {
     return name
-      .split(" ")
+      .split(' ')
       .map((n) => n[0])
-      .join("")
+      .join('')
       .toUpperCase()
       .slice(0, 2);
   };
@@ -62,7 +62,9 @@ export function Header({ className }: HeaderProps) {
   }
 
   return (
-    <header className={`flex items-center justify-between h-[58px] px-4 border-b bg-background ${className || ""}`}>
+    <header
+      className={`flex items-center justify-between h-[58px] px-4 border-b bg-background ${className || ''}`}
+    >
       {/* 左侧收起按钮 */}
       <div className="flex items-center">
         <SidebarTrigger />
@@ -89,7 +91,9 @@ export function Header({ className }: HeaderProps) {
                   {getUserInitials(user.name)}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium hidden sm:block">{user.name}</span>
+              <span className="text-sm font-medium hidden sm:block">
+                {user.name}
+              </span>
             </div>
           </DropdownMenuTrigger>
 
@@ -103,7 +107,7 @@ export function Header({ className }: HeaderProps) {
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{user.name}</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {user.email || t("Welcome back")}
+                  {user.email || t('Welcome back')}
                 </p>
               </div>
             </DropdownMenuLabel>
@@ -112,7 +116,7 @@ export function Header({ className }: HeaderProps) {
 
             <DropdownMenuItem className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
-              <span>{t("Profile")}</span>
+              <span>{t('Profile')}</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -122,7 +126,7 @@ export function Header({ className }: HeaderProps) {
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              <span>{t("Logout")}</span>
+              <span>{t('Logout')}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
