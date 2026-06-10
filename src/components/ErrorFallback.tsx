@@ -1,15 +1,15 @@
-import type { FC } from 'react';
-import { useTranslation } from 'react-i18next';
-import { RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
+import { Home, RefreshCw } from 'lucide-react';
+import type { FC } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /** 错误页面内联 SVG 插画 */
 const ErrorIllustration: FC = () => (

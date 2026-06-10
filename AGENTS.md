@@ -70,14 +70,15 @@ pnpm build        # 生产构建
 pnpm preview      # 预览构建产物
 pnpm format       # Biome 格式化代码
 pnpm check        # Biome lint + 自动修复
+pnpm type-check   # TypeScript 语法与类型安全检查
 pnpm sentry       # 上传 source map 到 Sentry
 ```
 
 ## 编码规范
 
-### 代码修改后必须运行格式化
+### 代码修改后必须运行格式化与语法检查
 
-每次修改代码后，**必须运行** `pnpm run format`。
+每次修改代码后，**必须运行** `pnpm format` 格式化代码，运行 `pnpm check` 进行 Biome 规范检查，并运行 `pnpm type-check` 进行 TypeScript 语法与类型安全检查。
 
 ### 组件规范
 

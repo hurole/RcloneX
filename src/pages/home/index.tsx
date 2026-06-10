@@ -1,8 +1,8 @@
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Header } from '@/components/Header';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import type { FC } from 'react';
-import { AppSidebar } from './AppSidebar';
 import { Outlet } from 'react-router';
+import { AppSidebar } from './AppSidebar';
 
 const Home: FC = () => {
   return (

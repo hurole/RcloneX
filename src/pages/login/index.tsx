@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import appLogo from '@/assets/appIcon.png';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import appLogo from '@/assets/appIcon.png';
-import { connect } from './services';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router';
 import { setLocal } from '@/shared/utils/local';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
+import { connect } from './services';
 
 export default function Login() {
   const [remote, setRemote] = useState('http://127.0.0.1:5572');

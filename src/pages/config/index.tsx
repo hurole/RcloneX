@@ -1,3 +1,17 @@
+import {
+  Cloud,
+  Database,
+  Edit,
+  Globe,
+  HardDrive,
+  Plus,
+  RefreshCw,
+  Search,
+  Server,
+  Settings,
+  Trash2,
+  Wifi,
+} from 'lucide-react';
 import React, {
   useState,
   useMemo,
@@ -6,30 +20,15 @@ import React, {
   useRef,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Server,
-  Cloud,
-  HardDrive,
-  Globe,
-  Database,
-  Wifi,
-  Settings,
-  RefreshCw,
-} from 'lucide-react';
+import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Card,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import {
   Dialog,
@@ -40,26 +39,28 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 // 导入服务
 import {
-  getAllConfigs,
-  createConfig,
-  updateConfig,
-  deleteConfig,
   type RcloneConfig,
+  createConfig,
+  deleteConfig,
+  getAllConfigs,
+  updateConfig,
 } from './services';
 
 // 配置类型定义
@@ -293,9 +294,17 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
 
 export default function Configs() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const [configs, setConfigs] = useState<RcloneConfig[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get('search') || '',
+  );
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get('search') || '');
+  }, [searchParams]);
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -330,6 +339,9 @@ export default function Configs() {
       console.log('成功获取配置列表:', configList);
 
       setConfigs(configList);
+      window.dispatchEvent(
+        new CustomEvent('rclone-configs-updated', { detail: configList }),
+      );
 
       if (configList.length === 0) {
         toast.info('当前没有配置，请添加您的第一个配置');

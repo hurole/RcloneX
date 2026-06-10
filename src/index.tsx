@@ -1,10 +1,11 @@
+import * as Sentry from '@sentry/react';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './pages/App';
-import * as Sentry from '@sentry/react';
 import ErrorFallback from './components/ErrorFallback';
+import App from './pages/App';
 import './styles/globals.css';
 import './locales/i18n';
+import { ThemeProvider } from 'next-themes';
 
 Sentry.init({
   dsn: 'http://90834f8b4a8b48c6a7da90202b953dbc@192.168.1.10:8000/1',
@@ -19,7 +20,9 @@ if (rootEl) {
   root.render(
     <React.StrictMode>
       <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
-        <App />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <App />
+        </ThemeProvider>
       </Sentry.ErrorBoundary>
     </React.StrictMode>,
   );
