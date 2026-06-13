@@ -1,136 +1,152 @@
-# RcloneX 项目提示词
+# RcloneX 代理商协作规范 (AGENTS.md)
 
-## 项目概述
+本文件是针对 AI 编程代理（Agents）的开发规范与指引。在对本项目进行任何修改或设计前，请务必仔细阅读并严格遵循本文件中的约束。
 
-RcloneX 是一个 Rclone 的 Web UI 前端项目，用于通过 Rclone Remote Control (RC) API 管理远程存储配置。使用 React 19 + TypeScript 构建，基于 Rsbuild v2 打包。
+---
 
-## 技术栈
+## 1. 项目概览
 
-| 类别 | 技术 |
-|------|------|
-| 框架 | React 19 |
-| 语言 | TypeScript 5.8 (strict 模式) |
-| 构建 | Rsbuild v2 + @rsbuild/plugin-react v2 |
-| 样式 | Tailwind CSS v4 + CSS Variables 主题 |
-| UI 组件 | shadcn/ui (new-york 风格) |
-| 图标 | lucide-react |
-| 路由 | react-router v7 |
-| 国际化 | i18next + react-i18next + i18next-browser-languagedetector |
-| HTTP | axios (封装为 NetworkClient 单例) |
-| 表单 | react-hook-form + @hookform/resolvers + zod |
-| Toast | sonner |
-| 主题 | next-themes |
-| 错误监控 | @sentry/react |
-| 代码格式 | Biome (format + lint + check) |
-| 包管理 | pnpm |
+RcloneX 是一个基于 Rclone Remote Control (RC) API 的现代化 Web UI 管理面板，主要用于远程存储配置的 CRUD、文件系统管理及后台任务监控。
 
-## 项目结构
+### 技术栈构成
+
+| 类别 | 技术选型 | 备注 / 规范要求 |
+| :--- | :--- | :--- |
+| **基础框架** | React 19 | 函数式组件，使用 `FC` 类型或 `export default function` |
+| **开发语言** | TypeScript 5.8 | 强制开启 `strict` 模式，禁止使用 `any` |
+| **构建系统** | Rsbuild v2 | 基于 Rspack 驱动，插件使用 `@rsbuild/plugin-react` |
+| **样式系统** | Tailwind CSS v4 | CSS Variables 驱动主题，严禁使用内联 `style` |
+| **UI 组件库**| shadcn/ui | 统一使用 `new-york` 风格，自 `@/components/ui/` 导入 |
+| **图标系统** | lucide-react | 统一样式与设计语言 |
+| **路由导航** | react-router v7 | 支持动态与嵌套路由 |
+| **国际化**   | i18next + react-i18next | 支持中英文切换，默认语言 `zh-CN` |
+| **网络请求** | Axios (NetworkClient 单例) | 自动处理鉴权 Token，401 自动重定向至登录页 |
+| **表单方案** | react-hook-form + Zod | 表单数据校验与动态配置表单生成 |
+| **通知反馈** | sonner | 全局 Toast 提示 |
+| **主题切换** | next-themes | 亮色/暗色模式切换 |
+| **代码规范** | Biome | 包含 Format、Lint 与 Check |
+| **测试框架** | Vitest | 单元测试与集成测试 |
+| **包管理器** | pnpm | 锁版本与依赖树管理 |
+
+### 路径别名配置
+
+| 别名 | 映射路径 | 目标用途 |
+| :--- | :--- | :--- |
+| `@/*` | `src/*` | 基础路径前缀 |
+| `@pages/*` | `src/pages/*` | 各大功能页面组件 |
+| `@components/*`| `src/components/*` | 全局共享 UI / 布局组件 |
+| `@utils` / `@utils/*` | `src/shared/utils` | 全局公共工具单例 / 方法 |
+
+---
+
+## 2. 项目目录结构
 
 ```
 src/
-├── assets/              # 静态资源（如 appIcon.png）
-├── components/          # 共享组件
-│   ├── ui/              # shadcn/ui 基础组件（Button, Card, Dialog 等）
+├── assets/              # 静态资源目录（如 appIcon.png）
+├── components/          # 共享 UI 组件
+│   ├── ui/              # shadcn/ui 导出的原子组件（Button, Card, Dialog 等）
 │   ├── Header.tsx       # 全局头部组件
-│   └── ErrorFallback.tsx # 错误边界 fallback
-├── hooks/               # 自定义 hooks（use-user, use-mobile）
-├── lib/utils/           # 工具函数（cn = clsx + tailwind-merge）
-├── locales/             # 国际化文件
+│   └── ErrorFallback.tsx # 错误边界 Fallback 视图
+├── hooks/               # 自定义 React Hooks（例如 use-user, use-mobile）
+├── lib/utils/           # 样式合并等辅助工具函数 (cn = clsx + tailwind-merge)
+├── locales/             # 国际化语言包目录
 │   ├── en-US/translation.json
 │   ├── zh-CN/translation.json
 │   └── i18n.ts
-├── pages/               # 页面组件（按路由组织）
-│   ├── App.tsx          # 路由定义
-│   ├── home/            # 主布局（Sidebar + Header + Outlet）
-│   ├── login/           # 登录页
-│   ├── dashboard/       # 仪表盘
-│   └── config/          # 配置管理（CRUD）
-├── shared/utils/        # 共享工具类
-│   ├── net.ts           # NetworkClient（axios 封装，单例）
-│   └── local.ts         # localStorage 操作
-├── styles/globals.css   # 全局样式 + CSS Variables
-├── env.d.ts             # 全局类型声明
-└── index.tsx            # 应用入口
+├── pages/               # 核心功能页面（按业务模块组织）
+│   ├── App.tsx          # 路由配置与应用入口定义
+│   ├── home/            # 主页布局 (Sidebar + Header + Outlet)
+│   ├── login/           # 登录鉴权页
+│   ├── dashboard/       # 仪表盘监控页
+│   ├── config/          # 存储配置 CRUD 页
+│   ├── explorer/        # 文件浏览器页
+│   ├── tasks/           # 传输与后台任务管理页
+│   ├── mounts/          # 远程挂载点管理页
+│   └── logs/            # 系统实时日志页
+├── shared/utils/        # 全局共享模块与单例
+│   ├── net.ts           # NetworkClient (Axios 封装，带拦截器)
+│   └── local.ts         # localStorage 统一读写工具
+├── styles/globals.css   # 全局样式文件与 Tailwind CSS Variables 主题定义
+├── env.d.ts             # 全局类型定义声明
+└── index.tsx            # Web App 的渲染挂载入口
 ```
 
-## 路径别名
+---
 
-| 别名 | 路径 | 用途 |
-|------|------|------|
-| `@/*` | `src/*` | 通用前缀 |
-| `@pages/*` | `src/pages/*` | 页面组件 |
-| `@components/*` | `src/components/*` | 共享组件 |
-| `@utils` / `@utils/*` | `src/shared/utils` | 工具模块 |
+## 3. 开发命令指南
 
-## 开发命令
+在开发调试或代码提交前，需通过 pnpm 执行以下命令：
 
 ```bash
-pnpm dev          # 启动开发服务器（自动打开浏览器）
-pnpm build        # 生产构建
-pnpm preview      # 预览构建产物
-pnpm format       # Biome 格式化代码
-pnpm check        # Biome lint + 自动修复
-pnpm type-check   # TypeScript 语法与类型安全检查
-pnpm sentry       # 上传 source map 到 Sentry
-```
+# 启动开发服务器（自动打开浏览器，端口默认为 3000）
+pnpm dev
 
-## 编码规范
+# 执行生产打包编译
+pnpm build
 
-### 代码修改后必须运行格式化与语法检查
+# 本地预览打包后的生产产物
+pnpm preview
 
-每次修改代码后，**必须运行** `pnpm format` 格式化代码，运行 `pnpm check` 进行 Biome 规范检查，并运行 `pnpm type-check` 进行 TypeScript 语法与类型安全检查。
-
-### 组件规范
-
-- 使用函数式组件 + `FC` 类型或 `export default function`
-- UI 组件统一使用 shadcn/ui，从 `@/components/ui/` 导入
-- 图标使用 lucide-react
-- 样式使用 Tailwind CSS class，避免内联 style
-- 组件文件使用 `.tsx` 扩展名
-
-### 页面组织
-
-- 每个页面放在 `src/pages/<page-name>/` 目录下
-- 页面的 API 服务放在 `src/pages/<page-name>/services/index.ts`
-- 页面入口为 `index.tsx`，子组件同目录放置
-
-### 网络请求
-
-- 使用 `net` 单例（从 `@/shared/utils` 导入）
-- 认证信息自动从 localStorage 读取（`rclone-rc` + `rclone-token`）
-- 响应拦截器自动提取 `response.data`，401 自动跳转登录
-
-### 国际化
-
-- 所有用户可见文本使用 `useTranslation()` hook 的 `t()` 函数
-- 翻译文件：`src/locales/en-US/translation.json` 和 `zh-CN/translation.json`
-- 新增文案必须同时添加中英文翻译
-- 默认语言：`zh-CN`
-
-### 用户反馈
-
-- 操作成功/失败使用 `sonner` 的 `toast.success()` / `toast.error()` / `toast.info()`
-- 加载状态使用 `RefreshCw` 图标 + `animate-spin`
-
-### TypeScript
-
-- strict 模式，禁止 `any`（优先使用 `unknown`）
-- `noUnusedLocals` + `noUnusedParameters` 开启
-- 接口类型定义与使用放在一起（services 文件中定义 API 相关类型）
-
-### Biome 格式化配置
-
-- 缩进：空格（space）
-- 引号：单引号（single quote）
-- CSS Modules 解析开启
-
-## 环境变量
-
-- `process.env.APP_VERSION`：通过 Rsbuild `source.define` 从 `package.json` 的 `version` 注入
-
-## Rclone RC 开发环境
-
-```bash
+# 启动本地 Rclone 模拟测试环境
 pnpm start:rclone
-# 等价于: rclone rcd --rc-addr :5572 --rc-user dev --rc-pass 1234 --rc-allow-origin http://localhost:3000
+# 备注：实际执行命令为: rclone rcd --rc-addr :5572 --rc-user dev --rc-pass 1234 --rc-allow-origin http://localhost:3000
+
+# 运行 Vitest 进行单元与集成测试（单次运行模式）
+pnpm test
+
+# 自动格式化项目代码
+pnpm format
+
+# 运行 Biome 检查并修复 Lint 与语法规范
+pnpm check
+
+# 验证 TypeScript 类型安全性
+pnpm type-check
+
+# 上传 source map 至 Sentry 错误追踪服务器
+pnpm sentry
 ```
+
+---
+
+## 4. 代理商编码规范约束 (CRITICAL)
+
+### ⚠️ 代码修改后置流程 (必须执行)
+任何时候只要你修改了代码，**必须依次运行**以下命令确保项目格式与类型无误：
+1. `pnpm format`：规范化代码排版。
+2. `pnpm check`：通过 Biome 进行语法约束检查与自动修复。
+3. `pnpm type-check`：验证没有 TypeScript 类型编译错误。
+4. `pnpm test`：运行所有单元测试，保证未引入回归 Bug。
+
+### 🎨 组件与页面开发规范
+- **文件后缀**：所有的 React 组件文件必须使用 `.tsx` 扩展名，非组件逻辑使用 `.ts`。
+- **UI 标准**：统一使用 shadcn/ui 组件，直接从 `@/components/ui/` 导入。禁止手动编写复杂的底层 HTML CSS 样式。
+- **图标选用**：统一从 `lucide-react` 导入，保持视觉一致性。
+- **内联样式**：严禁在组件中写 `style={{...}}` 内联样式，必须使用 Tailwind CSS 类名。
+- **页面组织**：
+  - 各个页面级组件必须放入 `src/pages/<page-name>/` 目录下。
+  - 页面对应的 API 请求服务必须放在 `src/pages/<page-name>/services/index.ts` 中。
+  - 页面主入口文件必须命名为 `index.tsx`，该页面专用的子组件直接存放在同级目录下。
+
+### 📡 网络请求与状态拦截
+- 必须导入并使用 `@utils/net` 中导出的 `NetworkClient` 单例。
+- 接口请求不需要手动设置 token，底层拦截器会自动从 localStorage 中的 `rclone-rc` 与 `rclone-token` 获取配置并附加在 Headers 中。
+- Axios 响应拦截器已配置为自动提取 `response.data`。当检测到 401 未授权错误时，程序会自动清理凭证并重定向至 `/login`。
+
+### 🌐 国际化规范 (i18n)
+- 任何直接呈现在 UI 上、供最终用户阅读的静态/动态文本，**禁止**直接硬编码，必须使用 `useTranslation()` 的 `t()` 函数包裹。
+- 新增文案必须在 [locales](file:///Users/hurole/code/RcloneX/src/locales/) 目录中同时为 `en-US/translation.json` 和 `zh-CN/translation.json` 补充对应的中英文翻译。
+- 默认语言为 `zh-CN`。
+
+### 🧪 测试规范
+- 编写代码逻辑（如新 Hooks、新 utils 函数或复杂组件）后，必须在同级目录（或对应位置）编写配套的测试文件，命名规则为 `*.test.ts` 或 `*.test.tsx`。
+- 在编写 React Component / Hook 的测试时，使用 `@testing-library/react` 与 `jsdom` 环境，涉及 `localStorage` 或 `fetch` 时应提前对其进行清理（`localStorage.clear()`）或模拟（Mock）。
+
+### 🧱 强类型约束
+- 必须启用并遵循 TS Strict 模式。**绝对禁止使用 `any` 类型**，应优先选择 `unknown` 或定义明确的 `interface` / `type`。
+- 全局编译选项已开启 `noUnusedLocals` 和 `noUnusedParameters`，注意清理无用的导入和参数。
+- 数据接口（Interfaces）应就近定义，API 请求与响应参数类型应统一在对应的 `services` 文件中声明。
+
+### 🔧 运行环境与定义
+- **版本注入**：前端可通过 `process.env.APP_VERSION` 获取版本号，该变量是通过 Rsbuild 的 `source.define` 从 `package.json` 中的 `version` 自动注入的。

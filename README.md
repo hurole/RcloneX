@@ -152,6 +152,7 @@ pnpm dev
 | `pnpm format` | 运行 Biome 格式化代码 |
 | `pnpm check` | 运行 Biome 检查并自动修复 Lint 问题 |
 | `pnpm type-check` | 运行 TypeScript 语法与类型安全检查 |
+| `pnpm test` | 运行 Vitest 进行单元与集成测试（单次运行） |
 | `pnpm sentry` | 上传 source map 至 Sentry 进行错误监控 |
 
 ### 编码规范与工作流
