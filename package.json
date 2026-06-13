@@ -48,6 +48,7 @@
     "@sentry/cli": "^3.5.0",
     "@tailwindcss/postcss": "^4.0.12",
     "@testing-library/react": "^16.3.2",
+    "@types/node": "^25.9.3",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^6.0.2",
