@@ -112,5 +112,29 @@
     "reload": "重新加载",
     "reportError": "报告错误",
     "backToHome": "返回首页"
+  },
+  "login": {
+    "title": "连接到 RcloneX",
+    "subtitle": "通过 Rclone Remote Control (RC) 协议轻松管理您的存储服务",
+    "remoteAddress": "远程服务地址",
+    "remoteAddressPlaceholder": "例如 http://127.0.0.1:5572",
+    "user": "用户名",
+    "userPlaceholder": "请输入用户名",
+    "password": "密码",
+    "passwordPlaceholder": "请输入密码",
+    "connect": "连接并登录",
+    "connecting": "正在连接 Rclone...",
+    "invalidUrl": "请输入有效的 URL 地址",
+    "urlRequired": "远程服务地址是必填项",
+    "userRequired": "用户名是必填项",
+    "passwordRequired": "密码是必填项",
+    "features": {
+      "multicloud": "多云存储管理",
+      "multicloudDesc": "支持 OneDrive、Google Drive、S3、WebDAV 等数十种远程协议",
+      "performance": "实时传输监控",
+      "performanceDesc": "高精度的带宽速率监控、系统负载状态与传输任务队列",
+      "mount": "挂载点管理器",
+      "mountDesc": "将云存储本地化挂载，操作犹如本地磁盘般极速便捷"
+    }
   }
 }

@@ -112,5 +112,29 @@
     "reload": "Reload Page",
     "reportError": "Report Error",
     "backToHome": "Back to Home"
+  },
+  "login": {
+    "title": "Connect to RcloneX",
+    "subtitle": "Easily manage your storage services via Rclone Remote Control (RC) protocol",
+    "remoteAddress": "Remote Address",
+    "remoteAddressPlaceholder": "e.g. http://127.0.0.1:5572",
+    "user": "Username",
+    "userPlaceholder": "Enter username",
+    "password": "Password",
+    "passwordPlaceholder": "Enter password",
+    "connect": "Connect & Login",
+    "connecting": "Connecting to Rclone...",
+    "invalidUrl": "Please enter a valid URL address",
+    "urlRequired": "Remote Address is required",
+    "userRequired": "Username is required",
+    "passwordRequired": "Password is required",
+    "features": {
+      "multicloud": "Multi-Cloud Storage Management",
+      "multicloudDesc": "Support OneDrive, Google Drive, S3, WebDAV and dozens of protocols",
+      "performance": "Real-Time Transfer Monitoring",
+      "performanceDesc": "High-precision speed monitoring, system load status and transfer queues",
+      "mount": "Mount Point Manager",
+      "mountDesc": "Mount cloud storage locally, operating as fast and easily as native disks"
+    }
   }
 }

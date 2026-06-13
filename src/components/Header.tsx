@@ -1,9 +1,8 @@
 import { LogOut, User } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +23,7 @@ export function Header({ className }: HeaderProps) {
   const navigate = useNavigate();
   const { user, clearUser } = useUser();
   const [isOpen, setIsOpen] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleLogout = () => {
     // 清除用户状态
@@ -49,12 +49,26 @@ export function Header({ className }: HeaderProps) {
 
   // 鼠标悬浮处理
   const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     setIsOpen(true);
   };
 
   const handleMouseLeave = () => {
-    setIsOpen(false);
+    timeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 150);
   };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   // 如果用户未登录，不显示Header
   if (!user) {
@@ -77,7 +91,7 @@ export function Header({ className }: HeaderProps) {
 
       {/* 右侧用户信息 */}
       <div className="flex items-center gap-4">
-        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
           <DropdownMenuTrigger
             className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
             onMouseEnter={handleMouseEnter}
@@ -85,12 +99,17 @@ export function Header({ className }: HeaderProps) {
             asChild
           >
             <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  {getUserInitials(user.name)}
-                </AvatarFallback>
-              </Avatar>
+              <div className="h-8 w-8 rounded-full overflow-hidden flex items-center justify-center bg-primary text-primary-foreground text-xs shrink-0 select-none">
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="aspect-square h-full w-full object-cover"
+                  />
+                ) : (
+                  getUserInitials(user.name)
+                )}
+              </div>
               <span className="text-sm font-medium hidden sm:block">
                 {user.name}
               </span>
