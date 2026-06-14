@@ -163,20 +163,20 @@ export default function Login() {
   return (
     <div className="flex min-h-screen bg-background transition-colors duration-300">
       {/* Left Pane: Brand & Feature Highlights */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-emerald-100 via-slate-100 to-teal-200/60 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950/30 text-slate-800 dark:text-slate-100 relative overflow-hidden border-r border-border/20">
         {/* Background Visual Effects */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30" />
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30 dark:opacity-20" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-teal-500/10 dark:bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Header Logo */}
         <div className="flex items-center gap-3 relative z-10">
           <img
             src={appLogo}
             alt="RcloneX Logo"
-            className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+            className="w-10 h-10 object-contain rounded-[20%] drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]"
           />
-          <span className="text-xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300">
+          <span className="text-xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300">
             RcloneX
           </span>
         </div>
@@ -184,55 +184,55 @@ export default function Login() {
         {/* Center Feature Cards */}
         <div className="space-y-8 max-w-lg relative z-10 my-auto">
           <div className="space-y-4">
-            <h1 className="text-4xl font-extrabold tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-violet-300">
+            <h1 className="text-4xl font-extrabold tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-300">
               RcloneX Dashboard
             </h1>
-            <p className="text-lg text-slate-300 font-light">
+            <p className="text-lg text-slate-600 dark:text-slate-300 font-light">
               {t('login.subtitle')}
             </p>
           </div>
 
           <div className="space-y-4">
             {/* Feature 1 */}
-            <div className="flex gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-800/50 backdrop-blur-md hover:bg-slate-900/60 hover:border-slate-700/50 hover:translate-x-1 transition-all duration-300 group">
-              <div className="p-2 h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500/20 transition-all">
+            <div className="flex gap-4 p-4 rounded-xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-md hover:bg-white/80 dark:hover:bg-slate-900/60 hover:border-emerald-200/50 dark:hover:border-slate-700/50 hover:translate-x-1 transition-all duration-300 group">
+              <div className="p-2 h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20 transition-all">
                 <HardDrive className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-200">
+                <h3 className="font-semibold text-slate-800 dark:text-slate-200">
                   {t('login.features.multicloud')}
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {t('login.features.multicloudDesc')}
                 </p>
               </div>
             </div>
 
             {/* Feature 2 */}
-            <div className="flex gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-800/50 backdrop-blur-md hover:bg-slate-900/60 hover:border-slate-700/50 hover:translate-x-1 transition-all duration-300 group">
-              <div className="p-2 h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/20 transition-all">
+            <div className="flex gap-4 p-4 rounded-xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-md hover:bg-white/80 dark:hover:bg-slate-900/60 hover:border-emerald-200/50 dark:hover:border-slate-700/50 hover:translate-x-1 transition-all duration-300 group">
+              <div className="p-2 h-10 w-10 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-600 dark:text-teal-400 group-hover:bg-teal-500/20 transition-all">
                 <Activity className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-200">
+                <h3 className="font-semibold text-slate-800 dark:text-slate-200">
                   {t('login.features.performance')}
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {t('login.features.performanceDesc')}
                 </p>
               </div>
             </div>
 
             {/* Feature 3 */}
-            <div className="flex gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-800/50 backdrop-blur-md hover:bg-slate-900/60 hover:border-slate-700/50 hover:translate-x-1 transition-all duration-300 group">
-              <div className="p-2 h-10 w-10 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-400 group-hover:bg-violet-500/20 transition-all">
+            <div className="flex gap-4 p-4 rounded-xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-md hover:bg-white/80 dark:hover:bg-slate-900/60 hover:border-emerald-200/50 dark:hover:border-slate-700/50 hover:translate-x-1 transition-all duration-300 group">
+              <div className="p-2 h-10 w-10 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover:bg-cyan-500/20 transition-all">
                 <Server className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-200">
+                <h3 className="font-semibold text-slate-800 dark:text-slate-200">
                   {t('login.features.mount')}
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {t('login.features.mountDesc')}
                 </p>
               </div>
@@ -241,7 +241,7 @@ export default function Login() {
         </div>
 
         {/* Footer Brand Info */}
-        <div className="flex justify-between items-center text-xs text-slate-500 relative z-10 border-t border-slate-900 pt-6">
+        <div className="flex justify-between items-center text-xs text-slate-450 dark:text-slate-500 relative z-10 border-t border-slate-200/60 dark:border-slate-900 pt-6">
           <span>&copy; {new Date().getFullYear()} RcloneX Project.</span>
           <span>MIT License</span>
         </div>
@@ -305,7 +305,7 @@ export default function Login() {
                   <img
                     src={appLogo}
                     alt="Logo"
-                    className="w-10 h-10 object-contain"
+                    className="w-10 h-10 object-contain rounded-[20%]"
                   />
                 </div>
                 <h2 className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300">

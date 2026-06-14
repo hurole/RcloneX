@@ -1,9 +1,11 @@
 import {
+  Activity,
   Cloud,
   Database,
   Edit,
   Globe,
   HardDrive,
+  Loader2,
   Plus,
   RefreshCw,
   Search,
@@ -24,12 +26,7 @@ import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -60,6 +57,7 @@ import {
   createConfig,
   deleteConfig,
   getAllConfigs,
+  testConfig,
   updateConfig,
 } from './services';
 
@@ -100,19 +98,19 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
   webdav: [
     {
       key: 'url',
-      label: 'WebDAV 服务器地址',
+      label: 'WebDAV Server Address',
       type: 'text',
       required: true,
-      placeholder: 'https://example.com/webdav 或 https://example.com/dav',
+      placeholder: 'https://example.com/webdav',
     },
     {
       key: 'vendor',
-      label: '服务商类型',
+      label: 'Vendor Type',
       type: 'select',
       required: false,
       defaultValue: 'other',
       options: [
-        { value: 'other', label: '其他' },
+        { value: 'other', label: 'Other' },
         { value: 'nextcloud', label: 'Nextcloud' },
         { value: 'owncloud', label: 'OwnCloud' },
         { value: 'sharepoint', label: 'SharePoint' },
@@ -121,30 +119,30 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
     },
     {
       key: 'user',
-      label: '用户名',
+      label: 'Username',
       type: 'text',
       required: true,
-      placeholder: '输入您的用户名',
+      placeholder: 'Username',
     },
     {
       key: 'pass',
-      label: '密码',
+      label: 'Password',
       type: 'password',
       required: true,
-      placeholder: '输入您的密码',
+      placeholder: 'Password',
     },
     {
       key: 'bearer_token',
       label: 'Bearer Token',
       type: 'password',
       required: false,
-      placeholder: '可选：使用 Bearer Token 代替用户名密码',
+      placeholder: 'Bearer Token',
     },
   ],
   ftp: [
     {
       key: 'host',
-      label: 'FTP Host',
+      label: 'Host',
       type: 'text',
       required: true,
       placeholder: 'ftp.example.com',
@@ -154,7 +152,7 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
       label: 'Username',
       type: 'text',
       required: false,
-      placeholder: '用户名',
+      placeholder: 'Username',
       defaultValue: 'anonymous',
     },
     {
@@ -162,7 +160,7 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
       label: 'Password',
       type: 'password',
       required: false,
-      placeholder: '密码',
+      placeholder: 'Password',
     },
     {
       key: 'port',
@@ -176,7 +174,7 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
   sftp: [
     {
       key: 'host',
-      label: 'SFTP Host',
+      label: 'Host',
       type: 'text',
       required: true,
       placeholder: 'sftp.example.com',
@@ -186,14 +184,14 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
       label: 'Username',
       type: 'text',
       required: true,
-      placeholder: '用户名',
+      placeholder: 'Username',
     },
     {
       key: 'pass',
       label: 'Password',
       type: 'password',
       required: false,
-      placeholder: '密码（可选）',
+      placeholder: 'Password',
     },
     {
       key: 'port',
@@ -208,7 +206,7 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
       label: 'Private Key File',
       type: 'text',
       required: false,
-      placeholder: '私钥文件路径（可选）',
+      placeholder: 'Private Key File',
     },
   ],
   s3: [
@@ -252,7 +250,7 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
       label: 'Endpoint',
       type: 'text',
       required: false,
-      placeholder: '自定义端点（可选）',
+      placeholder: 'Endpoint',
     },
   ],
   drive: [
@@ -279,17 +277,11 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
     },
   ],
   local: [
-    // Local 类型不需要额外参数
+    // Local types don't require parameters
   ],
-  dropbox: [
-    // Dropbox 需要 OAuth授权，暂时不支持参数输入
-  ],
-  onedrive: [
-    // OneDrive 需要 OAuth授权，暂时不支持参数输入
-  ],
-  box: [
-    // Box 需要 OAuth授权，暂时不支持参数输入
-  ],
+  dropbox: [],
+  onedrive: [],
+  box: [],
 };
 
 export default function Configs() {
@@ -300,6 +292,74 @@ export default function Configs() {
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get('search') || '',
   );
+
+  // 测试连接状态
+  const [testStates, setTestStates] = useState<
+    Record<
+      string,
+      {
+        status: 'idle' | 'testing' | 'success' | 'failed';
+        error?: string;
+        total?: number;
+        used?: number;
+        free?: number;
+      }
+    >
+  >({});
+
+  // 格式化容量
+  const formatBytes = (bytes?: number) => {
+    if (bytes === undefined || bytes === null || Number.isNaN(bytes)) return '';
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
+  };
+
+  // 测试配置连接
+  const handleTestConnection = async (configName: string) => {
+    setTestStates((prev) => ({
+      ...prev,
+      [configName]: { status: 'testing' },
+    }));
+
+    try {
+      const result = await testConfig(configName);
+      if (result.success) {
+        setTestStates((prev) => ({
+          ...prev,
+          [configName]: {
+            status: 'success',
+            total: result.total,
+            used: result.used,
+            free: result.free,
+          },
+        }));
+        toast.success(`${t('config.testSuccess')}: ${configName}`);
+      } else {
+        setTestStates((prev) => ({
+          ...prev,
+          [configName]: {
+            status: 'failed',
+            error: result.error,
+          },
+        }));
+        toast.error(
+          `${t('config.testFailed')}: ${result.error || 'Unknown error'}`,
+        );
+      }
+    } catch (error) {
+      setTestStates((prev) => ({
+        ...prev,
+        [configName]: {
+          status: 'failed',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      }));
+      toast.error(t('config.testFailed'));
+    }
+  };
 
   useEffect(() => {
     setSearchTerm(searchParams.get('search') || '');
@@ -668,9 +728,7 @@ export default function Configs() {
           <h1 className="text-3xl font-bold tracking-tight">
             {t('Configuration Management')}
           </h1>
-          <p className="text-muted-foreground mt-2">
-            管理您的 Rclone 远程存储配置
-          </p>
+          <p className="text-muted-foreground mt-2">{t('config.desc')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -694,7 +752,7 @@ export default function Configs() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder={t('Search configurations...')}
+            placeholder={t('config.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
@@ -734,81 +792,127 @@ export default function Configs() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredConfigs.map((config) => {
             const IconComponent = getConfigTypeIcon(config.type);
+            const testState = testStates[config.name] || { status: 'idle' };
             return (
               <Card
                 key={config.id}
-                className="group relative transition-all duration-200 hover:shadow-lg"
+                className="group relative transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1.5 border border-border/50 bg-card/60 backdrop-blur-md rounded-2xl flex flex-col justify-between overflow-hidden"
               >
-                {/* 右上角设置按钮 */}
-                <div className="absolute top-4 right-4 z-10">
-                  <DropdownMenu
-                    key={`dropdown-${config.id}`}
-                    open={openDropdownId === config.id}
-                    onOpenChange={(open) => {
-                      setOpenDropdownId(open ? config.id : null);
-                    }}
-                  >
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setOpenDropdownId(null);
-                          handleEditConfig(config);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        {t('Edit')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setOpenDropdownId(null);
-                          handleDeleteConfig(config);
-                        }}
-                        className="cursor-pointer text-red-600 focus:text-red-600"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        {t('Delete')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                {/* 悬浮时的顶部柔和渐变背景，使卡片具有发光的生命感 */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-                <CardHeader>
-                  <div className="flex items-start justify-between pr-8">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <IconComponent className="h-5 w-5 text-primary" />
+                {/* 装饰性背景柔和发光圆，随hover变化 */}
+                <div className="absolute -right-12 -top-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 group-hover:scale-125 transition-all duration-700 pointer-events-none" />
+
+                <div className="p-6 relative z-10 flex-1 flex flex-col">
+                  {/* 卡片头部：图标、名称、状态与设置下拉菜单 */}
+                  <div className="flex items-start justify-between gap-4 mb-5">
+                    <div className="flex items-center space-x-3.5 flex-1 min-w-0">
+                      {/* 渐变磨砂图标底色 */}
+                      <div className="p-3 rounded-2xl bg-gradient-to-tr from-primary/10 to-primary/5 border border-primary/15 group-hover:from-primary/20 group-hover:to-primary/10 transition-colors duration-500 shadow-sm">
+                        <IconComponent className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-500" />
                       </div>
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg leading-none">
+                      <div className="space-y-1 flex-1 min-w-0">
+                        <CardTitle className="text-lg font-bold tracking-tight text-foreground/95 truncate">
                           {config.name}
                         </CardTitle>
-                        <CardDescription>
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-primary/10 text-primary border border-primary/10">
                             {getConfigTypeLabel(config.type)}
                           </span>
-                        </CardDescription>
+
+                          {/* 状态呼吸灯与文字 */}
+                          {testState.status !== 'idle' && (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-colors duration-300 ${
+                                testState.status === 'testing'
+                                  ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                                  : testState.status === 'success'
+                                    ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                    : 'bg-red-500/10 text-red-500 border-red-500/20'
+                              }`}
+                              title={testState.error}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  testState.status === 'testing'
+                                    ? 'bg-yellow-500 animate-pulse'
+                                    : testState.status === 'success'
+                                      ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]'
+                                      : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'
+                                }`}
+                              />
+                              {testState.status === 'testing'
+                                ? t('config.testing')
+                                : testState.status === 'success'
+                                  ? t('config.testSuccess')
+                                  : t('config.testFailed')}
+                            </span>
+                          )}
+                        </div>
                       </div>
+                    </div>
+
+                    {/* 设置下拉按钮 */}
+                    <div className="shrink-0">
+                      <DropdownMenu
+                        key={`dropdown-${config.id}`}
+                        open={openDropdownId === config.id}
+                        onOpenChange={(open) => {
+                          setOpenDropdownId(open ? config.id : null);
+                        }}
+                      >
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full border border-transparent hover:border-border hover:bg-muted/50 transition-all animate-in fade-in"
+                          >
+                            <Settings className="h-4 w-4 text-muted-foreground/80 group-hover:text-foreground" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="backdrop-blur-md bg-popover/95 border border-border/60"
+                        >
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setOpenDropdownId(null);
+                              handleEditConfig(config);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            {t('Edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setOpenDropdownId(null);
+                              handleDeleteConfig(config);
+                            }}
+                            className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-500/10"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {t('Delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
 
-                  {/* 配置详情 */}
-                  <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+                  {/* 中间配置详情：以极其雅致的参数卡形式呈现 */}
+                  <div className="space-y-2.5 text-sm bg-muted/20 hover:bg-muted/30 border border-border/30 rounded-xl p-3.5 transition-all duration-300 flex-1">
                     {/* 显示关键配置信息 */}
                     {getConfigKeyInfo(config).map(({ key, value, title }) => (
-                      <div key={key} className="flex justify-between">
-                        <span>{key}:</span>
+                      <div
+                        key={key}
+                        className="flex justify-between items-center gap-4"
+                      >
+                        <span className="font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/85 shrink-0">
+                          {key}
+                        </span>
                         <span
-                          className="truncate max-w-[200px]"
+                          className="truncate text-xs font-mono font-semibold text-foreground/90 text-right"
                           title={title || value}
                         >
                           {value}
@@ -816,19 +920,77 @@ export default function Configs() {
                       </div>
                     ))}
 
-                    <div className="flex justify-between">
-                      <span>{t('Created At')}:</span>
-                      <span>{formatDate(config.createdAt)}</span>
+                    <div className="flex justify-between items-center gap-4">
+                      <span className="font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/85 shrink-0">
+                        {t('Created At')}
+                      </span>
+                      <span className="text-xs text-foreground/80 font-semibold text-right">
+                        {formatDate(config.createdAt)}
+                      </span>
                     </div>
 
                     {config.lastUsed && (
-                      <div className="flex justify-between">
-                        <span>最后使用:</span>
-                        <span>{formatDate(config.lastUsed)}</span>
+                      <div className="flex justify-between items-center gap-4">
+                        <span className="font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/85 shrink-0">
+                          {t('config.lastUsed')}
+                        </span>
+                        <span className="text-xs text-foreground/80 font-semibold text-right">
+                          {formatDate(config.lastUsed)}
+                        </span>
                       </div>
                     )}
                   </div>
-                </CardHeader>
+                </div>
+
+                {/* 底部功能区：连接容量与测试连接按钮 */}
+                <div className="px-6 pb-6 pt-0 mt-auto relative z-10">
+                  {/* 容量进度条 */}
+                  {testState.status === 'success' &&
+                    testState.total !== undefined &&
+                    testState.used !== undefined && (
+                      <div className="mb-4 space-y-2 bg-gradient-to-r from-primary/5 to-transparent p-3 rounded-xl border border-primary/10 shadow-sm animate-in slide-in-from-bottom-2 duration-300">
+                        <div className="flex justify-between text-[11px] font-bold text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Database className="h-3 w-3 text-primary" />
+                            {t('config.storageUsage')}
+                          </span>
+                          <span className="text-foreground/90 font-mono">
+                            {formatBytes(testState.used)} /{' '}
+                            {formatBytes(testState.total)} (
+                            {Math.round(
+                              (testState.used / testState.total) * 100,
+                            )}
+                            %)
+                          </span>
+                        </div>
+                        <progress
+                          value={testState.used}
+                          max={testState.total}
+                          className="w-full h-1.5 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-secondary/40 [&::-webkit-progress-value]:bg-gradient-to-r [&::-webkit-progress-value]:from-primary [&::-webkit-progress-value]:to-primary/65 [&::-moz-progress-bar]:bg-primary transition-all duration-500 shadow-inner"
+                        />
+                      </div>
+                    )}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTestConnection(config.name)}
+                    disabled={testState.status === 'testing'}
+                    className="w-full gap-2 transition-all duration-300 hover:bg-primary hover:text-primary-foreground group"
+                  >
+                    {testState.status === 'testing' ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>{t('config.testing')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Activity className="h-3.5 w-3.5 group-hover:animate-pulse" />
+                        <span>{t('config.testConnection')}</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
               </Card>
             );
           })}
@@ -837,12 +999,12 @@ export default function Configs() {
         <div className="text-center py-12">
           <Database className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            {t('No configurations found')}
+            {t('config.noConfigsFound')}
           </h3>
           <p className="text-muted-foreground mb-4">
             {searchTerm
-              ? `没有找到匹配 "${searchTerm}" 的配置`
-              : t('Click the button above to add your first configuration.')}
+              ? t('config.noMatchFound', { searchTerm })
+              : t('config.clickToAdd')}
           </p>
           {!searchTerm && (
             <Button
@@ -871,9 +1033,7 @@ export default function Configs() {
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('Add Configuration')}</DialogTitle>
-            <DialogDescription>
-              创建一个新的 Rclone 远程存储配置。
-            </DialogDescription>
+            <DialogDescription>{t('config.addConfigDesc')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -884,14 +1044,14 @@ export default function Configs() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="输入配置名称"
+                placeholder={t('config.inputConfigName')}
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="type">{t('Configuration Type')}</Label>
               <Select value={formData.type} onValueChange={handleTypeChange}>
                 <SelectTrigger>
-                  <SelectValue placeholder="选择配置类型" />
+                  <SelectValue placeholder={t('config.selectConfigType')} />
                 </SelectTrigger>
                 <SelectContent>
                   {CONFIG_TYPES.map((type) => (
@@ -910,11 +1070,13 @@ export default function Configs() {
             {formData.type && getCurrentParameterTemplate().length > 0 && (
               <div className="grid gap-4">
                 <div className="border-t pt-4">
-                  <h4 className="text-sm font-medium mb-3">配置参数</h4>
+                  <h4 className="text-sm font-medium mb-3">
+                    {t('config.configParams')}
+                  </h4>
                   {getCurrentParameterTemplate().map((param) => (
                     <div key={param.key} className="grid gap-2 mb-3">
                       <Label htmlFor={`param-${param.key}`}>
-                        {param.label}
+                        {t(param.label)}
                         {param.required && (
                           <span className="text-red-500 ml-1">*</span>
                         )}
@@ -931,7 +1093,11 @@ export default function Configs() {
                           }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder={`选择 ${param.label}`} />
+                            <SelectValue
+                              placeholder={t('config.selectPlaceholder', {
+                                label: t(param.label),
+                              })}
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {param.options?.map((option) => (
@@ -939,7 +1105,7 @@ export default function Configs() {
                                 key={option.value}
                                 value={option.value}
                               >
-                                {option.label}
+                                {t(option.label)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -958,7 +1124,9 @@ export default function Configs() {
                           onChange={(e) =>
                             handleParameterChange(param.key, e.target.value)
                           }
-                          placeholder={param.placeholder}
+                          placeholder={
+                            param.placeholder ? t(param.placeholder) : ''
+                          }
                           required={param.required}
                         />
                       )}
@@ -975,7 +1143,7 @@ export default function Configs() {
               ) && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
                   <p className="text-sm text-blue-700 dark:text-blue-300">
-                    此类型需要 OAuth 授权，配置创建后将引导您完成授权流程。
+                    {t('config.oauthTip')}
                   </p>
                 </div>
               )}
@@ -995,7 +1163,7 @@ export default function Configs() {
               {submitting ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  保存中...
+                  {t('config.saving')}
                 </>
               ) : (
                 t('Save')
@@ -1019,9 +1187,7 @@ export default function Configs() {
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('Edit Configuration')}</DialogTitle>
-            <DialogDescription>
-              修改现有的 Rclone 远程存储配置。
-            </DialogDescription>
+            <DialogDescription>{t('config.editConfigDesc')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -1032,11 +1198,11 @@ export default function Configs() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="输入配置名称"
+                placeholder={t('config.inputConfigName')}
                 disabled={true}
               />
               <p className="text-xs text-muted-foreground">
-                配置名称不可修改，如需修改请删除后重新创建
+                {t('config.nameCannotBeChanged')}
               </p>
             </div>
             <div className="grid gap-2">
@@ -1047,7 +1213,7 @@ export default function Configs() {
                 disabled={true}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择配置类型" />
+                  <SelectValue placeholder={t('config.selectConfigType')} />
                 </SelectTrigger>
                 <SelectContent>
                   {CONFIG_TYPES.map((type) => (
@@ -1061,7 +1227,7 @@ export default function Configs() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                配置类型不可修改，如需修改请删除后重新创建
+                {t('config.typeCannotBeChanged')}
               </p>
             </div>
 
@@ -1069,11 +1235,13 @@ export default function Configs() {
             {formData.type && getCurrentParameterTemplate().length > 0 && (
               <div className="grid gap-4">
                 <div className="border-t pt-4">
-                  <h4 className="text-sm font-medium mb-3">配置参数</h4>
+                  <h4 className="text-sm font-medium mb-3">
+                    {t('config.configParams')}
+                  </h4>
                   {getCurrentParameterTemplate().map((param) => (
                     <div key={param.key} className="grid gap-2 mb-3">
                       <Label htmlFor={`edit-param-${param.key}`}>
-                        {param.label}
+                        {t(param.label)}
                         {param.required && (
                           <span className="text-red-500 ml-1">*</span>
                         )}
@@ -1090,7 +1258,11 @@ export default function Configs() {
                           }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder={`选择 ${param.label}`} />
+                            <SelectValue
+                              placeholder={t('config.selectPlaceholder', {
+                                label: t(param.label),
+                              })}
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {param.options?.map((option) => (
@@ -1098,7 +1270,7 @@ export default function Configs() {
                                 key={option.value}
                                 value={option.value}
                               >
-                                {option.label}
+                                {t(option.label)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -1117,7 +1289,9 @@ export default function Configs() {
                           onChange={(e) =>
                             handleParameterChange(param.key, e.target.value)
                           }
-                          placeholder={param.placeholder}
+                          placeholder={
+                            param.placeholder ? t(param.placeholder) : ''
+                          }
                           required={param.required}
                         />
                       )}
@@ -1142,7 +1316,7 @@ export default function Configs() {
               {submitting ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  更新中...
+                  {t('config.updating')}
                 </>
               ) : (
                 t('Save')
@@ -1206,7 +1380,7 @@ export default function Configs() {
               {submitting ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  删除中...
+                  {t('config.deleting')}
                 </>
               ) : (
                 t('Confirm')

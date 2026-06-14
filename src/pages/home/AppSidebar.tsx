@@ -228,12 +228,12 @@ export function AppSidebar() {
             <img
               src={logo}
               alt="logo"
-              className="w-7 h-7 object-contain group-hover/logo:rotate-12 transition-transform duration-500"
+              className="w-7 h-7 object-contain rounded-[20%] group-hover/logo:rotate-12 transition-transform duration-500"
             />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">
-              <h2 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-primary via-blue-500 to-indigo-600 bg-clip-text text-transparent">
+              <h2 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-primary to-teal-500 bg-clip-text text-transparent">
                 RcloneX
               </h2>
               <span className="text-[10px] text-muted-foreground font-mono leading-none">

@@ -1,4 +1,5 @@
 import { net } from '@/shared/utils/net';
+import axios from 'axios';
 
 // Rclone 配置接口类型定义
 export interface RcloneConfigResponse {
@@ -293,21 +294,60 @@ export const getConfigProviders = async (): Promise<{
   }
 };
 
+export interface ConnectionTestResult {
+  success: boolean;
+  error?: string;
+  total?: number;
+  used?: number;
+  free?: number;
+}
+
 /**
  * 测试配置连接
  */
-export const testConfig = async (name: string): Promise<boolean> => {
+export const testConfig = async (
+  name: string,
+): Promise<ConnectionTestResult> => {
   try {
-    const response = await net.post<RcloneApiResponse>({
+    const response = await net.post<{
+      total?: number;
+      used?: number;
+      free?: number;
+      error?: string;
+    }>({
       url: '/operations/about',
       data: {
         fs: `${name}:`,
       },
     });
 
-    return !response.error;
+    if (response?.error) {
+      return {
+        success: false,
+        error: response.error,
+      };
+    }
+
+    return {
+      success: true,
+      total: response?.total,
+      used: response?.used,
+      free: response?.free,
+    };
   } catch (error) {
     console.error('测试配置连接失败:', error);
-    return false;
+    let errorMsg = '未知错误';
+    if (axios.isAxiosError(error) && error.response?.data) {
+      const responseData = error.response.data as { error?: string };
+      if (responseData.error) {
+        errorMsg = responseData.error;
+      }
+    } else if (error instanceof Error) {
+      errorMsg = error.message;
+    }
+    return {
+      success: false,
+      error: errorMsg,
+    };
   }
 };
