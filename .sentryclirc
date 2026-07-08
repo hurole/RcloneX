@@ -3,11 +3,11 @@
 url = http://192.168.1.10:8000
 
 # 2. 你的组织（Organization）Slug 标识
-org = foka
+org = sentry
 
 # 3. 你的项目（Project）Slug 标识
-project = minici
+project = rclonex
 
 [auth]
 # 4. 你的 API 访问令牌
-token = a16ad91235398cda91dcddf95bb9e7ddb64a7a9dff4b955b1d9ca6d0018c2a03
+token = 98315f5d59e0d434cabe455994c114e3850141dcba11f75a18f0fa738e1bd7ab

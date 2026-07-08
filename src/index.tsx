@@ -8,10 +8,10 @@ import './locales/i18n';
 import { ThemeProvider } from 'next-themes';
 
 Sentry.init({
-  dsn: 'http://90834f8b4a8b48c6a7da90202b953dbc@192.168.1.10:8000/1',
+  dsn: 'http://e11483402ab8482db17771a7b07cc6bb@192.168.1.10:8000/1',
   environment: 'development',
   release: process.env.APP_VERSION,
-  tracesSampleRate: 0.01, // 1% of transactions — adjust to your needs
+  tracesSampleRate: 1, // 1% of transactions — adjust to your needs
 });
 
 const rootEl = document.getElementById('root');
