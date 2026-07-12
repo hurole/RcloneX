@@ -9,6 +9,7 @@ export default defineConfig({
     },
   },
   output: {
+    assetPrefix: process.env.GITHUB_PAGES ? '/RcloneX/' : '/',
     sourceMap: {
       js: 'source-map',
     },
