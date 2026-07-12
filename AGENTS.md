@@ -160,7 +160,3 @@ nub run lint
 ### 🔧 运行环境与定义
 
 - **版本注入**：前端可通过 `process.env.APP_VERSION` 获取版本号，该变量是通过 Rsbuild 的 `source.define` 从 `package.json` 中的 `version` 自动注入的。
-
-### 🖥️ 浏览器调试规范
-
-- **优先选用 Playwright**：当需要运行浏览器调试、进行视觉样式验证或交互操作时，**必须优先选择使用 `playwright-cli` 技能**进行自动化浏览器测试，避免因系统环境不兼容导致初始化失败。
