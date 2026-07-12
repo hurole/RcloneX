@@ -6,6 +6,7 @@ export default defineConfig({
   source: {
     define: {
       'process.env.APP_VERSION': JSON.stringify(pkg.version),
+      'process.env.GITHUB_PAGES': JSON.stringify(!!process.env.GITHUB_PAGES),
     },
   },
   output: {

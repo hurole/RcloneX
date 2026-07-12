@@ -13,7 +13,7 @@ import type { FC } from 'react';
 const App: FC = () => {
   return (
     <div>
-      <BrowserRouter>
+      <BrowserRouter basename={process.env.GITHUB_PAGES ? '/RcloneX' : '/'}>
         <Routes>
           <Route path="/" element={<Home />}>
             <Route index path="dashboard" element={<Dashboard />} />
