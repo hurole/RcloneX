@@ -201,14 +201,19 @@ export function AppSidebar() {
       {/* Brand Header */}
       <SidebarHeader
         className={`border-border/40 flex items-center border-b p-4 ${
-          state === 'collapsed' ? 'justify-center' : 'flex-row justify-between gap-3'
+          state === 'collapsed' ? 'justify-center px-1.5' : 'flex-row justify-between gap-3'
         }`}>
-        <div className="flex items-center gap-3">
-          <div className="from-primary/20 to-primary/10 border-primary/20 group/logo rounded-xl border bg-gradient-to-tr p-1.5 shadow-inner transition-transform duration-300 hover:scale-105">
+        <div className={`flex items-center ${state === 'collapsed' ? 'justify-center' : 'gap-3'}`}>
+          <div
+            className={`from-primary/20 to-primary/10 border-primary/20 group/logo rounded-xl border bg-gradient-to-tr shadow-inner transition-all duration-300 hover:scale-105 ${
+              state === 'collapsed' ? 'p-1' : 'p-1.5'
+            }`}>
             <img
               src={logo}
               alt="logo"
-              className="h-7 w-7 rounded-[20%] object-contain transition-transform duration-500 group-hover/logo:rotate-12"
+              className={`rounded-[20%] object-contain transition-all duration-500 group-hover/logo:rotate-12 ${
+                state === 'collapsed' ? 'h-6 w-6' : 'h-7 w-7'
+              }`}
             />
           </div>
           {state === 'expanded' && (

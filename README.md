@@ -1,35 +1,53 @@
-# RcloneX
-
 <p align="center">
-  <img src="src/assets/appIcon.png" alt="RcloneX Logo" width="120" height="120" />
+  <a href="https://github.com/hurole/RcloneX">
+    <img src="src/assets/appIcon.png" alt="RcloneX Logo" width="120" height="120" style="border-radius: 24%" />
+  </a>
 </p>
 
-<h3 align="center">RcloneX</h3>
+<h1 align="center">RcloneX</h1>
 
 <p align="center">
-  基于 React 19 + TypeScript + Rsbuild v2 构建的现代化 Rclone Web UI 前端管理面板。
+  <strong>✨ 基于 React 19 + TypeScript 7.0.2 + Rsbuild v2 + Tailwind CSS v4 构建的现代化、高性能 Rclone Web UI 管理面板 ✨</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react" alt="React 19" />
-  <img src="https://img.shields.io/badge/TypeScript-7.0.2-blue?style=flat-square&logo=typescript" alt="TypeScript 7.0.2" />
-  <img src="https://img.shields.io/badge/Rsbuild-v2-orange?style=flat-square&logo=rsbuild" alt="Rsbuild v2" />
-  <img src="https://img.shields.io/badge/TailwindCSS-v4-38bdf8?style=flat-square&logo=tailwind-css" alt="TailwindCSS v4" />
-  <img src="https://img.shields.io/badge/shadcn%2Fui-new--york-black?style=flat-square" alt="shadcn/ui" />
-  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License MIT" />
+  <a href="https://react.dev">
+    <img src="https://img.shields.io/badge/React-19.2.7-blue?style=for-the-badge&logo=react&logoColor=white" alt="React 19" />
+  </a>
+  <a href="https://www.typescriptlang.org">
+    <img src="https://img.shields.io/badge/TypeScript-7.0.2-blue?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript 7.0" />
+  </a>
+  <a href="https://rsbuild.dev">
+    <img src="https://img.shields.io/badge/Rsbuild-v2.1.5-orange?style=for-the-badge&logo=rsbuild&logoColor=white" alt="Rsbuild v2" />
+  </a>
+  <a href="https://tailwindcss.com">
+    <img src="https://img.shields.io/badge/TailwindCSS-v4.3.2-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="TailwindCSS v4" />
+  </a>
+  <a href="https://ui.shadcn.com">
+    <img src="https://img.shields.io/badge/shadcn%2Fui-v2--new--york-black?style=for-the-badge" alt="shadcn/ui" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="#-核心特性">核心特性</a> •
+  <a href="#-技术栈亮点">技术栈亮点</a> •
+  <a href="#-快速上手">快速上手</a> •
+  <a href="#-项目结构">项目结构</a> •
+  <a href="#-开发与维护">开发与维护</a> •
+  <a href="#-参与贡献">参与贡献</a>
 </p>
 
 ---
 
 ## 📖 项目简介
 
-**RcloneX** 是一个功能强大且美观的 Rclone 远程控制（Remote Control, RC）API 前端客户端。它允许用户通过直观的 Web 界面直接管理、配置、浏览和操作连接到 Rclone 的各种远程存储服务。
+**RcloneX** 是一个功能强大且美观的 Rclone 远程控制（Remote Control, RC）API 现代前端客户端。它允许用户通过直观、顺滑的 Web 界面直接管理、配置、浏览和操作连接到 Rclone 的各种远程存储服务。
 
-### 架构示意图
+### 📡 架构示意图
 
 ```mermaid
 graph TD
-    User([用户]) <-->|交互| UI[RcloneX Web 界面]
+    User([用户]) <-->|图形交互| UI[RcloneX Web 界面]
     UI <-->|HTTP / Axios JSON-RPC| RClone[Rclone 后端守护进程 rcd]
     RClone <-->|Rclone 协议| Remote1[OneDrive / Google Drive]
     RClone <-->|Rclone 协议| Remote2[SFTP / FTP / WebDAV]
@@ -40,93 +58,62 @@ graph TD
 
 ## ✨ 核心特性
 
-- 🔒 **简易认证登录**：支持配置 Rclone RC 服务的 URL 地址、用户名和密码，快速建立连接。
-- 📊 **核心仪表盘**：实时监控当前的传输速率、带宽限制、已运行任务、CPU/内存占用等状态。
-- ⚙️ **配置管理器 (CRUD)**：可视化创建、修改、删除及查看 Rclone Remotes。
-- 📂 **多功能文件管理器**：
-  - 浏览各个 Remote 的目录树。
-  - 文件/文件夹的上传、下载、新建、删除。
-  - 支持跨远程存储的文件复制与移动。
-- ⏳ **任务与传输队列**：实时监控后台正在进行的同步、复制、移动等长耗时任务。
-- 🔌 **挂载点管理**：可视化管理和控制 Rclone 的本地挂载（Mounts）。
-- 📝 **系统日志监控**：实时查看 Rclone 运行日志，便于调试和排查问题。
-- 🌍 **完整国际化**：完美支持中英文（`zh-CN` / `en-US`）双语切换。
+- 🔒 **安全极简登录**：支持配置 Rclone RC 服务的连接地址、用户名和密码，一键认证并快速建立稳定通信。
+- 📊 **实时仪表盘**：直观的图表与状态卡片，实时监控当前传输速率、传输进度、已运行任务、系统资源占用等状态。
+- ⚙️ **配置管理器 (CRUD)**：可视化创建、修改、删除及查看 Rclone 存储源配置，摆脱繁琐的终端命令行交互。
+- 📂 **多功能文件浏览器**：
+  - 浏览各个 Remote 盘符的动态目录树。
+  - 文件/文件夹的秒级上传、下载、新建、删除。
+  - 支持跨远程存储服务之间直接进行文件复制与移动。
+- ⏳ **任务与传输队列**：实时监控后台正在进行的同步、复制、移动等长耗时传输任务，进度掌控一目了然。
+- 🔌 **挂载点管理器**：可视化管理和控制 Rclone 的本地挂载点（Mounts），轻松实现云盘本地化。
+- 📝 **实时系统日志**：无缝对接并实时流式查看 Rclone 运行日志，便于开发调试与故障排查。
+- 🌍 **完整国际化 (i18n)**：完美支持中英文（`zh-CN` / `en-US`）双语切换。
 
 ---
 
-## 🛠️ 技术栈
+## ⚡ 技术栈亮点
 
-| 模块          | 技术选择                   | 描述                                             |
-| :------------ | :------------------------- | :----------------------------------------------- |
-| **核心框架**  | React 19                   | 全新架构，极致性能                               |
-| **运行环境**  | Node.js v24.x              | 必须使用 Node 24 (项目已配置 .node-version 锁定) |
-| **编程语言**  | TypeScript 7.0.2           | strict 模式保证类型安全                          |
-| **构建工具**  | Rsbuild v2                 | 基于 Rspack，极速冷启动和热更新                  |
-| **样式系统**  | Tailwind CSS v4            | 使用 CSS Variables 驱动主题                      |
-| **UI 组件库** | shadcn/ui                  | new-york 风格组件，高度自定义                    |
-| **网络请求**  | Axios                      | 封装为 `NetworkClient` 单例进行认证和响应拦截    |
-| **表单验证**  | react-hook-form + Zod      | 类型安全的动态配置表单生成                       |
-| **状态/主题** | next-themes + lucide-react | 极简暗黑/明亮主题切换，现代化图标库              |
-| **国际化**    | i18next                    | 浏览器语言自动检测与中英文本地化                 |
+RcloneX 深度拥抱现代前端最速生态圈，具备极佳的加载性能与极致的代码规范：
 
----
-
-## 📂 项目结构
-
-```
-src/
-├── assets/              # 静态资源（如 appIcon.png）
-├── components/          # 共享组件
-│   ├── ui/              # shadcn/ui 基础组件
-│   ├── Header.tsx       # 全局头部组件
-│   └── ErrorFallback.tsx # 错误边界 fallback
-├── hooks/               # 自定义 React Hooks
-├── lib/utils/           # 样式合并与基础工具函数
-├── locales/             # 国际化语言包 (en-US / zh-CN)
-├── pages/               # 页面视图组件 (按路由组织)
-│   ├── App.tsx          # 路由配置入口
-│   ├── home/            # 框架主布局 (Sidebar + Header + Outlet)
-│   ├── login/           # 登录鉴权页面
-│   ├── dashboard/       # 仪表盘状态监控
-│   ├── config/          # 配置中心
-│   ├── explorer/        # 文件浏览器
-│   ├── tasks/           # 任务列表
-│   ├── mounts/          # 挂载管理
-│   └── logs/            # 运行日志
-├── shared/utils/        # 共享工具单例（网络、本地存储等）
-├── styles/globals.css   # 全局样式与 Tailwind 配置
-└── index.tsx            # 应用入口文件
-```
+- 🚀 **构建极速化 (Rsbuild v2)**：基于 Rspack 驱动的 Rsbuild 构建工具，冷启动与 HMR（热更新）耗时仅在微秒级别，开发体验极佳。
+- 💎 **全新规范 (TypeScript 7 + React 19)**：完全启用 TS Strict 编译标准，原子组件彻底去除 `forwardRef` 包装，代码清爽优雅。
+- 🏎️ **代码规范革新 (Oxc Toolchain)**：使用高性能 Oxc 工具链彻底替换 Biome：
+  - **`oxlint`**：进行超高速的代码静态语法分析（比传统 ESLint 快百倍）。
+  - **`oxfmt`**：配合 `@fka/oxfmt-config` 共享配置进行零摩擦极速代码格式化排版。
+- 🎨 **极致美学 (Tailwind v4 + shadcn/ui)**：全站 UI 基于最新的 shadcn/ui v2 新版规范，底层完美自适应折叠布局；使用 Tailwind CSS v4 CSS 变量驱动的 `@theme` 主题，带来丝滑顺滑的暗色/亮色切换体验。
 
 ---
 
 ## 🚀 快速上手
 
-### 1. 克隆并安装依赖
+### 1. 准备工作
 
-首先确保你的系统安装了 **Node.js (v24.x)** 和 **nub**。
+首先确保你的系统安装了 **Node.js (v24.x)** 和 modern 一站式工具链 **nub**。
+
+### 2. 克隆项目与安装
 
 ```bash
-# 克隆仓库并进入项目目录
+# 克隆仓库
 git clone https://github.com/hurole/RcloneX.git
 cd RcloneX
 
-# 安装依赖
+# 锁定项目 Node.js 版本并完成依赖安装
+nub node pin 24
 nub install
 ```
 
-### 2. 启动 Rclone Remote Control (RC) 守护进程
-
-RcloneX 是一个纯前端项目，需要连接到一个运行中的 Rclone RC 服务。你可以通过以下命令在本地启动测试服务（需提前安装 Rclone）：
+### 3. 启动本地 Rclone 模拟后端 (需提前安装 Rclone)
 
 ```bash
+# 启动本地 Rclone 并开启 RC 协议支持
 nub run start:rclone
 ```
 
-> **该命令的实际执行内容：**
-> `rclone rcd --rc-addr :5572 --rc-user dev --rc-pass 1234 --rc-allow-origin http://localhost:3000`
+> 💡 **提示：**
+> 该命令会在本地执行：`rclone rcd --rc-addr :5572 --rc-user dev --rc-pass 1234 --rc-allow-origin http://localhost:3000`
 
-### 3. 启动开发服务器
+### 4. 开启开发面板
 
 在另一个终端中，运行以下命令启动 RcloneX 前端：
 
@@ -134,7 +121,7 @@ nub run start:rclone
 nub run dev
 ```
 
-浏览器会自动打开并跳转至 `http://localhost:3000`。在登录页面输入对应的连接参数即可进入系统：
+浏览器会自动打开并跳转至 `http://localhost:3000`。在登录页面输入以下测试凭证即可进入系统：
 
 - **RC Address**: `http://localhost:5572`
 - **Username**: `dev`
@@ -142,41 +129,74 @@ nub run dev
 
 ---
 
+## 📂 项目结构
+
+```
+src/
+├── assets/              # 静态资源（包含 appIcon.png）
+├── components/          # 共享 UI 组件
+│   ├── ui/              # 最新版 shadcn/ui 基础组件
+│   ├── Header.tsx       # 全局头部组件 (响应式极简设计)
+│   └── ErrorFallback.tsx # 错误边界 Fallback 视图
+├── hooks/               # 自定义 React Hooks
+├── lib/utils/           # 样式合并与基础工具函数
+├── locales/             # 国际化翻译文件包 (en-US / zh-CN)
+├── pages/               # 各业务路由视图组件
+│   ├── App.tsx          # 路由配置入口
+│   ├── home/            # 框架主布局 (Sidebar + Header + Outlet)
+│   ├── login/           # 登录鉴权页面
+│   ├── dashboard/       # 仪表盘状态监控
+│   ├── config/          # 云存储配置中心
+│   ├── explorer/        # 文件浏览器
+│   ├── tasks/           # 后台任务列表
+│   ├── mounts/          # 挂载管理器
+│   └── logs/            # 系统实时日志
+├── shared/utils/        # 共享工具单例（网络请求单例、本地存储读写等）
+├── styles/globals.css   # 全局样式与 Tailwind v4 主题
+└── index.tsx            # 应用挂载入口
+```
+
+---
+
 ## 💻 开发与维护
 
-### 常用命令列表
+### 常用命令指南
 
-| 命令              | 描述                                       |
-| :---------------- | :----------------------------------------- |
-| `nub run dev`     | 启动开发服务器（含热更新）                 |
-| `nub run build`   | 编译打包生产环境产物                       |
-| `nub run preview` | 在本地预览生产环境构建产物                 |
-| `nub run check`   | 运行 TypeScript 语法与类型安全检查         |
-| `nub run fmt`     | 运行 oxfmt 自动格式化项目代码              |
-| `nub run lint`    | 运行 oxlint 进行代码 Lint 静态检查         |
-| `nub run test`    | 运行 Vitest 进行单元与集成测试（单次运行） |
-| `nub run sentry`  | 上传 source map 至 Sentry 进行错误监控     |
+在对代码进行本地开发或打包提交前，可通过 `nub` 运行以下脚本：
 
-### 编码规范与工作流
+| 运行指令              | 命令动作描述                                | 备注                                  |
+| :-------------------- | :------------------------------------------ | :------------------------------------ |
+| **`nub run dev`**     | 启动开发服务器（支持 HMR）                  | 默认开启端口 3000 并拉起浏览器        |
+| **`nub run lint`**    | 运行 **`oxlint`** 进行代码静态语法扫描      | 扫描速度极快，确保无低级代码错误      |
+| **`nub run fmt`**     | 运行 **`oxfmt`** 进行全站代码格式化排版     | 采用 `@fka/oxfmt-config` 最佳实践配置 |
+| **`nub run check`**   | 运行 **`tsc`** 进行 TypeScript 类型安全校验 | 检验全站没有任何编译级别类型报错      |
+| **`nub run test`**    | 运行 **`Vitest`** 进行单元与集成测试        | 执行全站断言，验证无任何回归 Bug      |
+| **`nub run build`**   | 执行生产环境编译打包                        | 打包出经过高度优化的静态静态文件      |
+| **`nub run preview`** | 本地预览生产构建打包产物                    | 检验生产打包产物在本地是否运行正常    |
+| **`nub run sentry`**  | 上传 Source Map 到 Sentry 服务器            | 供线上错误上报和追溯定位使用          |
 
-为了维护代码库的高质量，请遵循以下规范：
+### 🛠️ 规范与工作流约束 (CRITICAL)
 
-1. **修改代码后必须运行格式化与语法检查**：
-   ```bash
-   nub run lint
-   nub run fmt
-   nub run check
-   ```
-2. **组件定义**：
-   - 统一使用函数式组件 + `FC` 类型或 `export default function`。
-   - 所有 UI 组件应当直接引用自 `@/components/ui/`（基于 shadcn/ui）。
-   - 文件扩展名一律使用 `.tsx`。
-3. **国际化 (i18n)**：
-   - 所有页面中直接展示给用户的文本，必须使用 `useTranslation` hook 的 `t()` 函数。
-   - 对应文案须在 [locales](file:///Users/hurole/code/RcloneX/src/locales/) 目录下的 `en-US` 和 `zh-CN` 两个 JSON 文件中同时添加。
-4. **类型定义**：
-   - 禁止在项目中使用 `any` 类型，优先使用 `unknown` 并做类型守卫。
-   - 接口定义尽量放置在靠近其消费的 `services` 或组件中。
+当您向本项目贡献代码或进行功能修改时，**必须执行以下步骤确保项目格式与类型无误**：
+
+1.  **运行本地自检链**（修改完代码后，提交前必须全部绿灯通过）：
+    ```bash
+    nub run lint && nub run fmt && nub run check && nub run test
+    ```
+2.  **组件编写**：一律使用 `.tsx` 后缀，组件内禁止使用 `style={{...}}` 内联样式，必须使用 Tailwind 类名。
+3.  **禁止 `any`**：必须开启并遵循 TS Strict 模式，坚决禁止使用 `any`。
+4.  **国际化支持**：直接呈现给用户的静态/动态文本，禁止硬编码，必须使用 `t()` 函数包裹，并在中英文翻译 JSON 中同步添加。
+
+---
+
+## 🤝 参与贡献
+
+我们非常欢迎并感谢任何形式的贡献！
+
+- 如果发现了 Bug，请提交 [Issue](https://github.com/hurole/RcloneX/issues)。
+- 如果你想贡献代码，请提交 [Pull Request](https://github.com/hurole/RcloneX/pulls)。
+
+在提交 Pull Request 之前，请务必保证运行 `nub run lint && nub run fmt && nub run check && nub run test` 通过了所有自检校验。
 
 ---
 
