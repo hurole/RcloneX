@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react" alt="React 19" />
-  <img src="https://img.shields.io/badge/TypeScript-5.8-blue?style=flat-square&logo=typescript" alt="TypeScript 5.8" />
+  <img src="https://img.shields.io/badge/TypeScript-7.0.2-blue?style=flat-square&logo=typescript" alt="TypeScript 7.0.2" />
   <img src="https://img.shields.io/badge/Rsbuild-v2-orange?style=flat-square&logo=rsbuild" alt="Rsbuild v2" />
   <img src="https://img.shields.io/badge/TailwindCSS-v4-38bdf8?style=flat-square&logo=tailwind-css" alt="TailwindCSS v4" />
   <img src="https://img.shields.io/badge/shadcn%2Fui-new--york-black?style=flat-square" alt="shadcn/ui" />
@@ -56,17 +56,18 @@ graph TD
 
 ## 🛠️ 技术栈
 
-| 模块          | 技术选择                   | 描述                                          |
-| :------------ | :------------------------- | :-------------------------------------------- |
-| **核心框架**  | React 19                   | 全新架构，极致性能                            |
-| **编程语言**  | TypeScript 5.8             | strict 模式保证类型安全                       |
-| **构建工具**  | Rsbuild v2                 | 基于 Rspack，极速冷启动和热更新               |
-| **样式系统**  | Tailwind CSS v4            | 使用 CSS Variables 驱动主题                   |
-| **UI 组件库** | shadcn/ui                  | new-york 风格组件，高度自定义                 |
-| **网络请求**  | Axios                      | 封装为 `NetworkClient` 单例进行认证和响应拦截 |
-| **表单验证**  | react-hook-form + Zod      | 类型安全的动态配置表单生成                    |
-| **状态/主题** | next-themes + lucide-react | 极简暗黑/明亮主题切换，现代化图标库           |
-| **国际化**    | i18next                    | 浏览器语言自动检测与中英文本地化              |
+| 模块          | 技术选择                   | 描述                                             |
+| :------------ | :------------------------- | :----------------------------------------------- |
+| **核心框架**  | React 19                   | 全新架构，极致性能                               |
+| **运行环境**  | Node.js v24.x              | 必须使用 Node 24 (项目已配置 .node-version 锁定) |
+| **编程语言**  | TypeScript 7.0.2           | strict 模式保证类型安全                          |
+| **构建工具**  | Rsbuild v2                 | 基于 Rspack，极速冷启动和热更新                  |
+| **样式系统**  | Tailwind CSS v4            | 使用 CSS Variables 驱动主题                      |
+| **UI 组件库** | shadcn/ui                  | new-york 风格组件，高度自定义                    |
+| **网络请求**  | Axios                      | 封装为 `NetworkClient` 单例进行认证和响应拦截    |
+| **表单验证**  | react-hook-form + Zod      | 类型安全的动态配置表单生成                       |
+| **状态/主题** | next-themes + lucide-react | 极简暗黑/明亮主题切换，现代化图标库              |
+| **国际化**    | i18next                    | 浏览器语言自动检测与中英文本地化                 |
 
 ---
 
@@ -103,7 +104,7 @@ src/
 
 ### 1. 克隆并安装依赖
 
-首先确保你的系统安装了 **Node.js** 和 **nub**。
+首先确保你的系统安装了 **Node.js (v24.x)** 和 **nub**。
 
 ```bash
 # 克隆仓库并进入项目目录
