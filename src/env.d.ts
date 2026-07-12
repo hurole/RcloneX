@@ -13,7 +13,3 @@ declare module 'next-themes' {
     children?: React.ReactNode;
   }
 }
-
-declare module '@sentry/react' {
-  export class ErrorBoundary extends React.Component<any, any> {}
-}

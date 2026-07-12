@@ -173,7 +173,6 @@ src/
 | **`nub run test`**    | 运行 **`Vitest`** 进行单元与集成测试        | 执行全站断言，验证无任何回归 Bug      |
 | **`nub run build`**   | 执行生产环境编译打包                        | 打包出经过高度优化的静态静态文件      |
 | **`nub run preview`** | 本地预览生产构建打包产物                    | 检验生产打包产物在本地是否运行正常    |
-| **`nub run sentry`**  | 上传 Source Map 到 Sentry 服务器            | 供线上错误上报和追溯定位使用          |
 
 ### 🛠️ 规范与工作流约束 (CRITICAL)
 

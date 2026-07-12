@@ -104,9 +104,6 @@ nub run fmt
 
 # 运行 oxlint 进行代码 Lint 静态检查
 nub run lint
-
-# 上传 source map 至 Sentry 错误追踪服务器
-nub run sentry
 ```
 
 ---

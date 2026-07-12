@@ -11,8 +11,7 @@
     "lint": "oxlint",
     "preview": "rsbuild preview",
     "start:rclone": "rclone rcd --rc-addr :5572 --rc-user dev --rc-pass 1234 --rc-allow-origin http://localhost:3000",
-    "test": "vitest run",
-    "sentry": "sentry-cli sourcemaps upload ./dist --release $(node -p \"require('./package.json').version\") --url-prefix ~/"
+    "test": "vitest run"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
@@ -24,7 +23,6 @@
     "@radix-ui/react-separator": "^1.1.11",
     "@radix-ui/react-slot": "^1.3.0",
     "@radix-ui/react-tooltip": "^1.2.12",
-    "@sentry/react": "^10.65.0",
     "axios": "^1.11.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -47,7 +45,6 @@
     "@fka/oxfmt-config": "^0.1.1",
     "@rsbuild/core": "^2.1.5",
     "@rsbuild/plugin-react": "^2.1.0",
-    "@sentry/cli": "^3.5.0",
     "@tailwindcss/postcss": "^4.0.12",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.9.3",
