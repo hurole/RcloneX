@@ -7,9 +7,7 @@ describe('cn utility', () => {
   });
 
   it('should ignore falsy values', () => {
-    expect(cn('bg-red-500', false, null, undefined, 'text-white')).toBe(
-      'bg-red-500 text-white',
-    );
+    expect(cn('bg-red-500', false, null, undefined, 'text-white')).toBe('bg-red-500 text-white');
   });
 
   it('should resolve conflicting Tailwind classes via tailwind-merge', () => {

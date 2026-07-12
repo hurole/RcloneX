@@ -16,7 +16,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
@@ -29,23 +28,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type RcloneConfig, getAllConfigs } from '@/pages/config/services';
-import {
-  type RcloneFileItem,
-  copyJob,
-  deleteFile,
-  listDirectory,
-  makeDirectory,
-  purgeDirectory,
-} from './services';
+import { type RcloneFileItem, copyJob, deleteFile, listDirectory, makeDirectory, purgeDirectory } from './services';
 
 export default function Explorer() {
   const { t } = useTranslation();
@@ -67,9 +52,7 @@ export default function Explorer() {
   const [creatingFolder, setCreatingFolder] = useState(false);
 
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
-  const [copyTargetItem, setCopyTargetItem] = useState<RcloneFileItem | null>(
-    null,
-  );
+  const [copyTargetItem, setCopyTargetItem] = useState<RcloneFileItem | null>(null);
   const [targetRemote, setTargetRemote] = useState('');
   const [targetPath, setTargetPath] = useState('');
   const [copying, setCopying] = useState(false);
@@ -83,7 +66,7 @@ export default function Explorer() {
 
         // If searchParam passes a remote, select it
         const urlRemote = searchParams.get('search');
-        if (urlRemote && data.some((c) => c.name === urlRemote)) {
+        if (urlRemote && data.some(c => c.name === urlRemote)) {
           setSelectedRemote(urlRemote);
         } else if (data.length > 0) {
           setSelectedRemote(data[0].name);
@@ -135,9 +118,7 @@ export default function Explorer() {
   // Breadcrumbs list
   const getBreadcrumbs = () => {
     const parts = currentPath.split('/').filter(Boolean);
-    const list: Array<{ name: string; path: string }> = [
-      { name: t('Root Directory'), path: '' },
-    ];
+    const list: Array<{ name: string; path: string }> = [{ name: t('Root Directory'), path: '' }];
 
     let tempPath = '';
     for (const part of parts) {
@@ -152,9 +133,7 @@ export default function Explorer() {
     if (!newFolderName.trim()) return;
     setCreatingFolder(true);
     try {
-      const dirPath = currentPath
-        ? `${currentPath}/${newFolderName}`
-        : newFolderName;
+      const dirPath = currentPath ? `${currentPath}/${newFolderName}` : newFolderName;
       await makeDirectory(selectedRemote, dirPath);
       toast.success('文件夹创建成功');
       setNewFolderName('');
@@ -169,9 +148,7 @@ export default function Explorer() {
 
   // Delete item
   const handleDeleteItem = async (item: RcloneFileItem) => {
-    const confirmMsg = item.IsDir
-      ? t('Delete Folder Confirm Msg')
-      : t('Delete File Confirm Msg');
+    const confirmMsg = item.IsDir ? t('Delete Folder Confirm Msg') : t('Delete File Confirm Msg');
     if (!window.confirm(confirmMsg)) return;
 
     try {
@@ -191,8 +168,7 @@ export default function Explorer() {
   const handleOpenCopyDialog = (item: RcloneFileItem) => {
     setCopyTargetItem(item);
     // Default target selection
-    const defaultTarget =
-      remotes.find((r) => r.name !== selectedRemote)?.name || selectedRemote;
+    const defaultTarget = remotes.find(r => r.name !== selectedRemote)?.name || selectedRemote;
     setTargetRemote(defaultTarget);
     setTargetPath(currentPath);
     setIsCopyDialogOpen(true);
@@ -203,15 +179,8 @@ export default function Explorer() {
     setCopying(true);
     try {
       // Build destination path
-      const targetSubPath = targetPath
-        ? `${targetPath}/${copyTargetItem.Name}`
-        : copyTargetItem.Name;
-      await copyJob(
-        selectedRemote,
-        copyTargetItem.Path,
-        targetRemote,
-        targetSubPath,
-      );
+      const targetSubPath = targetPath ? `${targetPath}/${copyTargetItem.Name}` : copyTargetItem.Name;
+      await copyJob(selectedRemote, copyTargetItem.Path, targetRemote, targetSubPath);
       toast.success('后台复制任务已启动！可在“任务监控”中查看进度');
       setIsCopyDialogOpen(false);
 
@@ -245,42 +214,30 @@ export default function Explorer() {
   };
 
   return (
-    <div className="space-y-4 animate-fade-in pb-10">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="animate-fade-in space-y-4 pb-10">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {t('Explorer')}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            浏览您的云端存储，管理文件与触发数据同步任务。
-          </p>
+          <h1 className="text-foreground text-2xl font-bold tracking-tight">{t('Explorer')}</h1>
+          <p className="text-muted-foreground text-sm">浏览您的云端存储，管理文件与触发数据同步任务。</p>
         </div>
 
         {/* Remote selector dropdown */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <Label
-            htmlFor="remote-select"
-            className="text-sm font-semibold shrink-0"
-          >
+        <div className="flex w-full items-center gap-3 sm:w-auto">
+          <Label htmlFor="remote-select" className="shrink-0 text-sm font-semibold">
             {t('Select Remote')}:
           </Label>
           <Select
             value={selectedRemote}
-            onValueChange={(val) => {
+            onValueChange={val => {
               setSelectedRemote(val);
               setCurrentPath('');
-            }}
-          >
+            }}>
             <SelectTrigger className="w-[180px] font-medium">
               <SelectValue placeholder="选择存储源" />
             </SelectTrigger>
             <SelectContent>
-              {remotes.map((remote) => (
-                <SelectItem
-                  key={remote.name}
-                  value={remote.name}
-                  className="font-semibold"
-                >
+              {remotes.map(remote => (
+                <SelectItem key={remote.name} value={remote.name} className="font-semibold">
                   {remote.name} ({remote.type})
                 </SelectItem>
               ))}
@@ -290,39 +247,35 @@ export default function Explorer() {
       </div>
 
       {/* Explorer Container */}
-      <Card className="border border-border/50 shadow-md overflow-hidden">
+      <Card className="border-border/50 overflow-hidden border shadow-md">
         {/* Toolbar Header */}
-        <CardHeader className="bg-muted/30 p-4 border-b border-border/40">
-          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+        <CardHeader className="bg-muted/30 border-border/40 border-b p-4">
+          <div className="flex flex-col items-stretch justify-between gap-4 md:flex-row md:items-center">
             {/* Breadcrumbs navigation */}
-            <div className="flex items-center gap-1.5 overflow-x-auto py-1 font-medium text-sm no-scrollbar">
+            <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto py-1 text-sm font-medium">
               {currentPath && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={navigateUp}
                   className="h-7 w-7 rounded-md"
-                  title="返回上一级"
-                >
+                  title="返回上一级">
                   <ArrowLeft className="size-4" />
                 </Button>
               )}
 
               {getBreadcrumbs().map((bc, idx, arr) => (
                 <React.Fragment key={bc.path || 'root'}>
-                  {idx > 0 && (
-                    <ChevronRight className="size-3.5 text-muted-foreground/60 shrink-0" />
-                  )}
+                  {idx > 0 && <ChevronRight className="text-muted-foreground/60 size-3.5 shrink-0" />}
                   <button
                     type="button"
                     onClick={() => navigateToFolder(bc.path)}
                     disabled={idx === arr.length - 1}
-                    className={`hover:text-primary transition-colors cursor-pointer shrink-0 truncate max-w-[120px] ${
+                    className={`hover:text-primary max-w-[120px] shrink-0 cursor-pointer truncate transition-colors ${
                       idx === arr.length - 1
-                        ? 'font-bold text-foreground cursor-default'
+                        ? 'text-foreground cursor-default font-bold'
                         : 'text-muted-foreground font-semibold'
-                    }`}
-                  >
+                    }`}>
                     {bc.name}
                   </button>
                 </React.Fragment>
@@ -332,14 +285,13 @@ export default function Explorer() {
             {/* Action buttons */}
             <div className="flex items-center justify-end gap-2.5">
               {/* View mode toggle */}
-              <div className="flex items-center rounded-lg border border-border/50 bg-background p-0.5 shadow-sm">
+              <div className="border-border/50 bg-background flex items-center rounded-lg border p-0.5 shadow-sm">
                 <Button
                   variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                   size="icon"
                   onClick={() => setViewMode('list')}
                   className="h-7 w-7 rounded-md"
-                  title="列表视图"
-                >
+                  title="列表视图">
                   <List className="size-4" />
                 </Button>
                 <Button
@@ -347,8 +299,7 @@ export default function Explorer() {
                   size="icon"
                   onClick={() => setViewMode('grid')}
                   className="h-7 w-7 rounded-md"
-                  title="网格视图"
-                >
+                  title="网格视图">
                   <LayoutGrid className="size-4" />
                 </Button>
               </div>
@@ -357,22 +308,18 @@ export default function Explorer() {
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
-                className="h-8 rounded-lg cursor-pointer"
-                disabled={loading}
-              >
-                <RefreshCw
-                  className={`size-3.5 mr-2 ${loading ? 'animate-spin' : ''}`}
-                />
+                className="h-8 cursor-pointer rounded-lg"
+                disabled={loading}>
+                <RefreshCw className={`mr-2 size-3.5 ${loading ? 'animate-spin' : ''}`} />
                 {t('Refresh')}
               </Button>
 
               <Button
                 size="sm"
                 onClick={() => setIsNewFolderOpen(true)}
-                className="h-8 rounded-lg cursor-pointer"
-                disabled={!selectedRemote || loading}
-              >
-                <Plus className="size-3.5 mr-2" />
+                className="h-8 cursor-pointer rounded-lg"
+                disabled={!selectedRemote || loading}>
+                <Plus className="mr-2 size-3.5" />
                 {t('New Folder')}
               </Button>
             </div>
@@ -380,32 +327,28 @@ export default function Explorer() {
         </CardHeader>
 
         {/* File explorer content */}
-        <CardContent className="p-0 min-h-[400px] flex flex-col justify-between">
+        <CardContent className="flex min-h-[400px] flex-col justify-between p-0">
           {loading ? (
-            <div className="flex flex-col items-center justify-center flex-1 py-20 gap-3">
-              <Loader2 className="size-8 animate-spin text-primary" />
-              <span className="text-sm font-semibold text-muted-foreground">
-                正在加载云端文件列表...
-              </span>
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20">
+              <Loader2 className="text-primary size-8 animate-spin" />
+              <span className="text-muted-foreground text-sm font-semibold">正在加载云端文件列表...</span>
             </div>
           ) : !selectedRemote ? (
-            <div className="flex flex-col items-center justify-center flex-1 py-20 text-muted-foreground gap-3">
+            <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-3 py-20">
               <AlertTriangle className="size-10 text-amber-500/80" />
-              <span className="text-sm font-semibold">
-                请先在右上角选择一个远程存储配置。
-              </span>
+              <span className="text-sm font-semibold">请先在右上角选择一个远程存储配置。</span>
             </div>
           ) : files.length === 0 ? (
-            <div className="flex flex-col items-center justify-center flex-1 py-20 text-muted-foreground/60 italic gap-2.5">
-              <Folder className="size-12 opacity-40 text-muted-foreground" />
+            <div className="text-muted-foreground/60 flex flex-1 flex-col items-center justify-center gap-2.5 py-20 italic">
+              <Folder className="text-muted-foreground size-12 opacity-40" />
               <span className="text-sm font-semibold">该目录为空</span>
             </div>
           ) : viewMode === 'list' ? (
             /* List View */
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-left border-collapse text-sm">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b border-border/40 bg-muted/20 font-semibold text-muted-foreground">
+                  <tr className="border-border/40 bg-muted/20 text-muted-foreground border-b font-semibold">
                     <th className="p-3.5 pl-6">{t('Configuration Name')}</th>
                     <th className="p-3.5">{t('Size')}</th>
                     <th className="p-3.5">{t('Type')}</th>
@@ -413,38 +356,32 @@ export default function Explorer() {
                     <th className="p-3.5 pr-6 text-right">{t('Actions')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/20">
-                  {files.map((item) => (
-                    <tr
-                      key={item.Path}
-                      className="hover:bg-muted/30 transition-colors group"
-                    >
-                      <td className="p-3 pl-6 font-semibold max-w-[280px] truncate">
+                <tbody className="divide-border/20 divide-y">
+                  {files.map(item => (
+                    <tr key={item.Path} className="hover:bg-muted/30 group transition-colors">
+                      <td className="max-w-[280px] truncate p-3 pl-6 font-semibold">
                         {item.IsDir ? (
                           <button
                             type="button"
                             onClick={() => navigateToFolder(item.Path)}
-                            className="flex items-center text-primary font-bold hover:underline text-left cursor-pointer"
-                          >
-                            <Folder className="size-4.5 mr-2.5 fill-primary/10 text-primary shrink-0" />
+                            className="text-primary flex cursor-pointer items-center text-left font-bold hover:underline">
+                            <Folder className="fill-primary/10 text-primary mr-2.5 size-4.5 shrink-0" />
                             {item.Name}
                           </button>
                         ) : (
-                          <div className="flex items-center text-foreground font-semibold">
-                            <File className="size-4.5 mr-2.5 text-muted-foreground shrink-0" />
+                          <div className="text-foreground flex items-center font-semibold">
+                            <File className="text-muted-foreground mr-2.5 size-4.5 shrink-0" />
                             {item.Name}
                           </div>
                         )}
                       </td>
-                      <td className="p-3 text-muted-foreground font-mono text-xs">
+                      <td className="text-muted-foreground p-3 font-mono text-xs">
                         {item.IsDir ? '-' : formatBytes(item.Size)}
                       </td>
-                      <td className="p-3 text-muted-foreground text-xs font-semibold">
+                      <td className="text-muted-foreground p-3 text-xs font-semibold">
                         {item.IsDir ? 'Directory' : item.MimeType || 'Unknown'}
                       </td>
-                      <td className="p-3 text-muted-foreground text-xs">
-                        {formatDate(item.ModTime)}
-                      </td>
+                      <td className="text-muted-foreground p-3 text-xs">{formatDate(item.ModTime)}</td>
                       <td className="p-3 pr-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <Button
@@ -452,8 +389,7 @@ export default function Explorer() {
                             size="icon"
                             title="备份同步至其他存储"
                             onClick={() => handleOpenCopyDialog(item)}
-                            className="h-8 w-8 rounded-lg cursor-pointer text-muted-foreground hover:text-primary hover:bg-primary/10"
-                          >
+                            className="text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 w-8 cursor-pointer rounded-lg">
                             <Copy className="size-3.5" />
                           </Button>
                           <Button
@@ -461,8 +397,7 @@ export default function Explorer() {
                             size="icon"
                             title={t('Delete')}
                             onClick={() => handleDeleteItem(item)}
-                            className="h-8 w-8 rounded-lg cursor-pointer text-muted-foreground hover:text-red-600 hover:bg-red-50/10"
-                          >
+                            className="text-muted-foreground h-8 w-8 cursor-pointer rounded-lg hover:bg-red-50/10 hover:text-red-600">
                             <Trash2 className="size-3.5" />
                           </Button>
                         </div>
@@ -474,54 +409,46 @@ export default function Explorer() {
             </div>
           ) : (
             /* Grid View */
-            <div className="p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {files.map((item) => (
+            <div className="grid grid-cols-2 gap-4 p-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {files.map(item => (
                 <div
                   key={item.Path}
-                  className="group relative flex flex-col justify-between p-4 rounded-xl border border-border/40 hover:border-primary/40 hover:shadow-md hover:bg-muted/20 transition-all duration-300 min-h-[140px] text-center"
-                >
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-0.5 bg-background/95 border border-border/40 rounded-lg p-0.5 shadow-sm">
+                  className="group border-border/40 hover:border-primary/40 hover:bg-muted/20 relative flex min-h-[140px] flex-col justify-between rounded-xl border p-4 text-center transition-all duration-300 hover:shadow-md">
+                  <div className="bg-background/95 border-border/40 absolute top-2 right-2 flex items-center gap-0.5 rounded-lg border p-0.5 opacity-0 shadow-sm transition-opacity duration-200 group-hover:opacity-100">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleOpenCopyDialog(item)}
-                      className="h-7 w-7 rounded-md cursor-pointer text-muted-foreground hover:text-primary"
-                    >
+                      className="text-muted-foreground hover:text-primary h-7 w-7 cursor-pointer rounded-md">
                       <Copy className="size-3" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteItem(item)}
-                      className="h-7 w-7 rounded-md cursor-pointer text-muted-foreground hover:text-red-600"
-                    >
+                      className="text-muted-foreground h-7 w-7 cursor-pointer rounded-md hover:text-red-600">
                       <Trash2 className="size-3" />
                     </Button>
                   </div>
 
-                  <div className="flex-1 flex flex-col items-center justify-center gap-2.5">
+                  <div className="flex flex-1 flex-col items-center justify-center gap-2.5">
                     {item.IsDir ? (
                       <button
                         type="button"
                         onClick={() => navigateToFolder(item.Path)}
-                        className="flex flex-col items-center gap-2 hover:opacity-85 cursor-pointer text-primary"
-                      >
-                        <Folder className="size-11 fill-primary/10 text-primary transition-transform duration-300 group-hover:scale-105" />
-                        <span className="text-xs font-bold truncate max-w-[130px]">
-                          {item.Name}
-                        </span>
+                        className="text-primary flex cursor-pointer flex-col items-center gap-2 hover:opacity-85">
+                        <Folder className="fill-primary/10 text-primary size-11 transition-transform duration-300 group-hover:scale-105" />
+                        <span className="max-w-[130px] truncate text-xs font-bold">{item.Name}</span>
                       </button>
                     ) : (
                       <div className="flex flex-col items-center gap-2">
-                        <File className="size-11 text-muted-foreground/80 transition-transform duration-300 group-hover:scale-105" />
-                        <span className="text-xs font-bold text-foreground truncate max-w-[130px]">
-                          {item.Name}
-                        </span>
+                        <File className="text-muted-foreground/80 size-11 transition-transform duration-300 group-hover:scale-105" />
+                        <span className="text-foreground max-w-[130px] truncate text-xs font-bold">{item.Name}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="text-[10px] text-muted-foreground/80 font-mono mt-2 pt-2 border-t border-border/10">
+                  <div className="text-muted-foreground/80 border-border/10 mt-2 border-t pt-2 font-mono text-[10px]">
                     {item.IsDir ? 'Directory' : formatBytes(item.Size)}
                   </div>
                 </div>
@@ -536,19 +463,17 @@ export default function Explorer() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="font-bold">{t('New Folder')}</DialogTitle>
-            <DialogDescription>
-              在当前目录下创建一个新的文件夹。
-            </DialogDescription>
+            <DialogDescription>在当前目录下创建一个新的文件夹。</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="folder-name" className="font-semibold text-sm">
+              <Label htmlFor="folder-name" className="text-sm font-semibold">
                 {t('Folder Name')}
               </Label>
               <Input
                 id="folder-name"
                 value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
+                onChange={e => setNewFolderName(e.target.value)}
                 placeholder={t('Folder Name Placeholder')}
                 disabled={creatingFolder}
                 className="col-span-3 font-semibold"
@@ -561,16 +486,14 @@ export default function Explorer() {
               variant="outline"
               onClick={() => setIsNewFolderOpen(false)}
               disabled={creatingFolder}
-              className="cursor-pointer"
-            >
+              className="cursor-pointer">
               {t('Cancel')}
             </Button>
             <Button
               type="button"
               onClick={handleCreateFolder}
               disabled={creatingFolder || !newFolderName.trim()}
-              className="cursor-pointer font-semibold"
-            >
+              className="cursor-pointer font-semibold">
               {creatingFolder ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -588,49 +511,36 @@ export default function Explorer() {
       <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="font-bold flex items-center gap-2">
-              <Copy className="size-5 text-primary" />
+            <DialogTitle className="flex items-center gap-2 font-bold">
+              <Copy className="text-primary size-5" />
               {t('Transfer Setup')}
             </DialogTitle>
-            <DialogDescription>
-              选择目标存储云盘与路径，在后台开启文件的复制备份任务。
-            </DialogDescription>
+            <DialogDescription>选择目标存储云盘与路径，在后台开启文件的复制备份任务。</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="space-y-1 bg-muted/40 p-3 rounded-lg border border-border/40 font-mono text-[11px] text-muted-foreground">
+            <div className="bg-muted/40 border-border/40 text-muted-foreground space-y-1 rounded-lg border p-3 font-mono text-[11px]">
               <div className="flex items-center justify-between">
                 <span>源盘:</span>
-                <span className="font-bold text-foreground">
-                  {selectedRemote}
-                </span>
+                <span className="text-foreground font-bold">{selectedRemote}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>源路径:</span>
-                <span className="font-bold text-foreground truncate max-w-[280px]">
-                  {copyTargetItem?.Path || '/'}
-                </span>
+                <span className="text-foreground max-w-[280px] truncate font-bold">{copyTargetItem?.Path || '/'}</span>
               </div>
             </div>
 
             <div className="grid gap-3">
-              <Label htmlFor="target-remote" className="font-bold text-sm">
+              <Label htmlFor="target-remote" className="text-sm font-bold">
                 {t('Destination Remote')}
               </Label>
               <Select value={targetRemote} onValueChange={setTargetRemote}>
-                <SelectTrigger
-                  id="target-remote"
-                  className="w-full font-semibold"
-                >
+                <SelectTrigger id="target-remote" className="w-full font-semibold">
                   <SelectValue placeholder="选择目标存储" />
                 </SelectTrigger>
                 <SelectContent>
-                  {remotes.map((remote) => (
-                    <SelectItem
-                      key={remote.name}
-                      value={remote.name}
-                      className="font-semibold"
-                    >
+                  {remotes.map(remote => (
+                    <SelectItem key={remote.name} value={remote.name} className="font-semibold">
                       {remote.name} ({remote.type})
                     </SelectItem>
                   ))}
@@ -639,13 +549,13 @@ export default function Explorer() {
             </div>
 
             <div className="grid gap-3">
-              <Label htmlFor="target-path" className="font-bold text-sm">
+              <Label htmlFor="target-path" className="text-sm font-bold">
                 {t('Destination Path')}
               </Label>
               <Input
                 id="target-path"
                 value={targetPath}
-                onChange={(e) => setTargetPath(e.target.value)}
+                onChange={e => setTargetPath(e.target.value)}
                 placeholder="可选：目标云盘根目录或相对路径"
                 disabled={copying}
                 className="font-medium"
@@ -659,16 +569,14 @@ export default function Explorer() {
               variant="outline"
               onClick={() => setIsCopyDialogOpen(false)}
               disabled={copying}
-              className="cursor-pointer"
-            >
+              className="cursor-pointer">
               {t('Cancel')}
             </Button>
             <Button
               type="button"
               onClick={handleConfirmCopy}
               disabled={copying || !targetRemote}
-              className="cursor-pointer font-bold bg-primary text-primary-foreground hover:bg-primary/95"
-            >
+              className="bg-primary text-primary-foreground hover:bg-primary/95 cursor-pointer font-bold">
               {copying ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

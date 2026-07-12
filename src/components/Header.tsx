@@ -2,7 +2,6 @@ import { LogOut, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +22,7 @@ export function Header({ className }: HeaderProps) {
   const navigate = useNavigate();
   const { user, clearUser } = useUser();
   const [isOpen, setIsOpen] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleLogout = () => {
     // 清除用户状态
@@ -41,7 +40,7 @@ export function Header({ className }: HeaderProps) {
   const getUserInitials = (name: string) => {
     return name
       .split(' ')
-      .map((n) => n[0])
+      .map(n => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -76,43 +75,32 @@ export function Header({ className }: HeaderProps) {
   }
 
   return (
-    <header
-      className={`flex items-center justify-between h-[58px] px-4 border-b bg-background ${className || ''}`}
-    >
+    <header className={`bg-background flex h-[58px] items-center justify-between border-b px-4 ${className || ''}`}>
       {/* 左侧收起按钮 */}
       <div className="flex items-center">
         <SidebarTrigger />
       </div>
 
       {/* 中间可以放置其他内容，比如标题或搜索框 */}
-      <div className="flex-1 px-4">
-        {/* 这里可以添加标题、搜索框等其他元素 */}
-      </div>
+      <div className="flex-1 px-4">{/* 这里可以添加标题、搜索框等其他元素 */}</div>
 
       {/* 右侧用户信息 */}
       <div className="flex items-center gap-4">
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
           <DropdownMenuTrigger
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+            className="flex cursor-pointer items-center gap-2 transition-opacity hover:opacity-80"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            asChild
-          >
+            asChild>
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full overflow-hidden flex items-center justify-center bg-primary text-primary-foreground text-xs shrink-0 select-none">
+              <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs select-none">
                 {user.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="aspect-square h-full w-full object-cover"
-                  />
+                  <img src={user.avatar} alt={user.name} className="aspect-square h-full w-full object-cover" />
                 ) : (
                   getUserInitials(user.name)
                 )}
               </div>
-              <span className="text-sm font-medium hidden sm:block">
-                {user.name}
-              </span>
+              <span className="hidden text-sm font-medium sm:block">{user.name}</span>
             </div>
           </DropdownMenuTrigger>
 
@@ -120,14 +108,11 @@ export function Header({ className }: HeaderProps) {
             align="end"
             className="w-56"
             onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
+            onMouseLeave={handleMouseLeave}>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user.name}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user.email || t('Welcome back')}
-                </p>
+                <p className="text-sm leading-none font-medium">{user.name}</p>
+                <p className="text-muted-foreground text-xs leading-none">{user.email || t('Welcome back')}</p>
               </div>
             </DropdownMenuLabel>
 
@@ -140,10 +125,7 @@ export function Header({ className }: HeaderProps) {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem
-              className="cursor-pointer text-red-600 focus:text-red-600"
-              onClick={handleLogout}
-            >
+            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>{t('Logout')}</span>
             </DropdownMenuItem>

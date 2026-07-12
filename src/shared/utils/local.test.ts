@@ -14,8 +14,6 @@ describe('local utility', () => {
     setLocal(rc, user, pass);
 
     expect(localStorage.getItem('rclone-rc')).toBe(rc);
-    expect(localStorage.getItem('rclone-token')).toBe(
-      btoa('admin:password123'),
-    );
+    expect(localStorage.getItem('rclone-token')).toBe(btoa('admin:password123'));
   });
 });

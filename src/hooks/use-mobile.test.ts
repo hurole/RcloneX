@@ -10,7 +10,7 @@ describe('useIsMobile hook', () => {
     changeListener = null;
 
     // Mock window.matchMedia since jsdom does not implement it fully
-    window.matchMedia = vi.fn().mockImplementation((query) => ({
+    window.matchMedia = vi.fn().mockImplementation(query => ({
       matches: window.innerWidth < 768,
       media: query,
       onchange: null,

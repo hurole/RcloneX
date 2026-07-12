@@ -1,17 +1,3 @@
-import logo from '@/assets/appIcon.png';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarSeparator,
-  useSidebar,
-} from '@/components/ui/sidebar';
-import { useUser } from '@/hooks/use-user';
-import { type RcloneConfig, getAllConfigs } from '@/pages/config/services';
 import {
   Activity,
   CircleDot,
@@ -36,6 +22,20 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
+import logo from '@/assets/appIcon.png';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import { useUser } from '@/hooks/use-user';
+import { type RcloneConfig, getAllConfigs } from '@/pages/config/services';
 
 export function AppSidebar() {
   const { t, i18n } = useTranslation();
@@ -64,14 +64,8 @@ export function AppSidebar() {
     setMounted(true);
     // Simulating minor network traffic changes to make UI feel alive
     const interval = setInterval(() => {
-      const downVal =
-        Math.random() > 0.7
-          ? `${(Math.random() * 200 + 10).toFixed(1)} KB/s`
-          : '0 B/s';
-      const upVal =
-        Math.random() > 0.8
-          ? `${(Math.random() * 50 + 2).toFixed(1)} KB/s`
-          : '0 B/s';
+      const downVal = Math.random() > 0.7 ? `${(Math.random() * 200 + 10).toFixed(1)} KB/s` : '0 B/s';
+      const upVal = Math.random() > 0.8 ? `${(Math.random() * 50 + 2).toFixed(1)} KB/s` : '0 B/s';
       setSimulatedSpeed({ down: downVal, up: upVal });
     }, 4000);
 
@@ -106,10 +100,7 @@ export function AppSidebar() {
 
     window.addEventListener('rclone-configs-updated', handleConfigsUpdated);
     return () => {
-      window.removeEventListener(
-        'rclone-configs-updated',
-        handleConfigsUpdated,
-      );
+      window.removeEventListener('rclone-configs-updated', handleConfigsUpdated);
     };
   }, [fetchConfigs]);
 
@@ -124,9 +115,7 @@ export function AppSidebar() {
   const toggleLanguage = () => {
     const nextLang = i18n.language === 'zh-CN' ? 'en-US' : 'zh-CN';
     i18n.changeLanguage(nextLang);
-    toast.info(
-      nextLang === 'zh-CN' ? '已切换为中文' : 'Language switched to English',
-    );
+    toast.info(nextLang === 'zh-CN' ? '已切换为中文' : 'Language switched to English');
   };
 
   const toggleTheme = () => {
@@ -140,10 +129,7 @@ export function AppSidebar() {
 
   // Check if a remote is active (based on URL query parameter)
   const isRemoteActive = (remoteName: string) => {
-    return (
-      location.pathname === '/configs' &&
-      searchParams.get('search') === remoteName
-    );
+    return location.pathname === '/configs' && searchParams.get('search') === remoteName;
   };
 
   // Map remote types to Lucide icons
@@ -169,9 +155,7 @@ export function AppSidebar() {
   };
 
   // Filtered remotes based on sidebar search input
-  const filteredRemotes = remotes.filter((remote) =>
-    remote.name.toLowerCase().includes(remoteSearchQuery.toLowerCase()),
-  );
+  const filteredRemotes = remotes.filter(remote => remote.name.toLowerCase().includes(remoteSearchQuery.toLowerCase()));
 
   const mainNavItems = [
     {
@@ -213,57 +197,51 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-border/40 bg-sidebar/95 backdrop-blur-md transition-all duration-300"
-    >
+      className="border-border/40 bg-sidebar/95 border-r backdrop-blur-md transition-all duration-300">
       {/* Brand Header */}
       <SidebarHeader
-        className={`flex items-center p-4 border-b border-border/40 ${
-          state === 'collapsed'
-            ? 'justify-center'
-            : 'flex-row justify-between gap-3'
-        }`}
-      >
+        className={`border-border/40 flex items-center border-b p-4 ${
+          state === 'collapsed' ? 'justify-center' : 'flex-row justify-between gap-3'
+        }`}>
         <div className="flex items-center gap-3">
-          <div className="p-1.5 rounded-xl bg-gradient-to-tr from-primary/20 to-primary/10 border border-primary/20 shadow-inner group/logo hover:scale-105 transition-transform duration-300">
+          <div className="from-primary/20 to-primary/10 border-primary/20 group/logo rounded-xl border bg-gradient-to-tr p-1.5 shadow-inner transition-transform duration-300 hover:scale-105">
             <img
               src={logo}
               alt="logo"
-              className="w-7 h-7 object-contain rounded-[20%] group-hover/logo:rotate-12 transition-transform duration-500"
+              className="h-7 w-7 rounded-[20%] object-contain transition-transform duration-500 group-hover/logo:rotate-12"
             />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">
-              <h2 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-primary to-teal-500 bg-clip-text text-transparent">
+              <h2 className="from-primary bg-gradient-to-r to-teal-500 bg-clip-text text-lg font-extrabold tracking-tight text-transparent">
                 RcloneX
               </h2>
-              <span className="text-[10px] text-muted-foreground font-mono leading-none">
-                v1.0.1
-              </span>
+              <span className="text-muted-foreground font-mono text-[10px] leading-none">v1.0.1</span>
             </div>
           )}
         </div>
 
         {state === 'expanded' && (
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium animate-fade-in">
+          <div className="animate-fade-in flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
             </span>
             {t('Connected')}
           </div>
         )}
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-3 space-y-3 no-scrollbar">
+      <SidebarContent className="no-scrollbar space-y-3 px-2 py-3">
         {/* Navigation Section */}
         <div>
           {state === 'expanded' && (
-            <p className="px-3 mb-2 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+            <p className="text-muted-foreground/70 mb-2 px-3 text-[10px] font-semibold tracking-widest uppercase">
               {t('General')}
             </p>
           )}
           <SidebarMenu className="space-y-1">
-            {mainNavItems.map((item) => {
+            {mainNavItems.map(item => {
               const active = isLinkActive(item.url);
               return (
                 <SidebarMenuItem key={item.title}>
@@ -271,40 +249,23 @@ export function AppSidebar() {
                     asChild
                     isActive={active}
                     tooltip={state === 'collapsed' ? item.title : undefined}
-                    className={`
-                      group/item relative overflow-hidden rounded-xl transition-all duration-200 ease-in-out
-                      ${
-                        active
-                          ? 'bg-gradient-to-r from-primary to-blue-600 text-primary-foreground shadow-md shadow-primary/20 scale-[1.01]'
-                          : 'hover:bg-primary/10 hover:text-primary active:scale-[0.98]'
-                      }
-                      ${state === 'collapsed' ? 'w-full justify-center p-3' : 'p-3'}
-                    `}
-                  >
+                    className={`group/item relative overflow-hidden rounded-xl transition-all duration-200 ease-in-out ${
+                      active
+                        ? 'from-primary text-primary-foreground shadow-primary/20 scale-[1.01] bg-gradient-to-r to-blue-600 shadow-md'
+                        : 'hover:bg-primary/10 hover:text-primary active:scale-[0.98]'
+                    } ${state === 'collapsed' ? 'w-full justify-center p-3' : 'p-3'} `}>
                     <Link
                       to={item.url}
-                      className={`
-                        flex items-center w-full transition-all duration-200
-                        ${state === 'collapsed' ? 'justify-center' : 'gap-3'}
-                      `}
-                    >
+                      className={`flex w-full items-center transition-all duration-200 ${state === 'collapsed' ? 'justify-center' : 'gap-3'} `}>
                       {/* Premium vertical active indicator */}
                       {!active && (
-                        <div className="absolute left-[3px] top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-full bg-primary opacity-0 group-hover/item:opacity-100 transition-all duration-200" />
+                        <div className="bg-primary absolute top-1/2 left-[3px] h-4 w-[3px] -translate-y-1/2 rounded-full opacity-0 transition-all duration-200 group-hover/item:opacity-100" />
                       )}
 
                       <item.icon
-                        className={`
-                          transition-all duration-200 shrink-0
-                          ${state === 'collapsed' ? 'size-5' : 'size-4'}
-                          group-hover/item:scale-110
-                        `}
+                        className={`shrink-0 transition-all duration-200 ${state === 'collapsed' ? 'size-5' : 'size-4'} group-hover/item:scale-110`}
                       />
-                      {state === 'expanded' && (
-                        <span className="font-semibold text-sm truncate">
-                          {item.title}
-                        </span>
-                      )}
+                      {state === 'expanded' && <span className="truncate text-sm font-semibold">{item.title}</span>}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -318,12 +279,12 @@ export function AppSidebar() {
         {/* Dynamic Cloud Remotes List */}
         <div>
           {state === 'expanded' && (
-            <div className="flex items-center justify-between px-3 mb-2">
-              <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+            <div className="mb-2 flex items-center justify-between px-3">
+              <p className="text-muted-foreground/70 text-[10px] font-semibold tracking-widest uppercase">
                 {t('Remotes')}
               </p>
               {remotes.length > 0 && (
-                <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded-md text-muted-foreground font-semibold">
+                <span className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold">
                   {remotes.length}
                 </span>
               )}
@@ -332,40 +293,34 @@ export function AppSidebar() {
 
           {/* Search box for remotes in Sidebar - only when expanded */}
           {state === 'expanded' && remotes.length > 3 && (
-            <div className="px-2 mb-2">
-              <div className="relative flex items-center rounded-lg border border-border/40 bg-muted/30 px-2.5 py-1 focus-within:border-primary/50 transition-colors duration-200">
-                <Search className="size-3.5 text-muted-foreground shrink-0" />
+            <div className="mb-2 px-2">
+              <div className="border-border/40 bg-muted/30 focus-within:border-primary/50 relative flex items-center rounded-lg border px-2.5 py-1 transition-colors duration-200">
+                <Search className="text-muted-foreground size-3.5 shrink-0" />
                 <input
                   type="text"
                   placeholder={t('Search remotes...')}
                   value={remoteSearchQuery}
-                  onChange={(e) => setRemoteSearchQuery(e.target.value)}
-                  className="ml-2 w-full bg-transparent text-xs outline-none text-foreground placeholder:text-muted-foreground/60"
+                  onChange={e => setRemoteSearchQuery(e.target.value)}
+                  className="text-foreground placeholder:text-muted-foreground/60 ml-2 w-full bg-transparent text-xs outline-none"
                 />
               </div>
             </div>
           )}
 
-          <SidebarMenu className="max-h-[220px] overflow-y-auto pr-0.5 space-y-0.5 custom-scrollbar">
+          <SidebarMenu className="custom-scrollbar max-h-[220px] space-y-0.5 overflow-y-auto pr-0.5">
             {loadingRemotes ? (
-              <div className="flex items-center justify-center py-4 text-muted-foreground gap-2">
+              <div className="text-muted-foreground flex items-center justify-center gap-2 py-4">
                 <Loader2 className="size-3.5 animate-spin" />
-                {state === 'expanded' && (
-                  <span className="text-xs">
-                    {t('Loading') || 'Loading...'}
-                  </span>
-                )}
+                {state === 'expanded' && <span className="text-xs">{t('Loading') || 'Loading...'}</span>}
               </div>
             ) : filteredRemotes.length === 0 ? (
               state === 'expanded' && (
-                <p className="text-xs text-muted-foreground/60 text-center py-4 italic">
-                  {remoteSearchQuery
-                    ? t('No configurations found')
-                    : t('No configurations found')}
+                <p className="text-muted-foreground/60 py-4 text-center text-xs italic">
+                  {remoteSearchQuery ? t('No configurations found') : t('No configurations found')}
                 </p>
               )
             ) : (
-              filteredRemotes.map((remote) => {
+              filteredRemotes.map(remote => {
                 const RemoteIcon = getRemoteIcon(remote.type);
                 const active = isRemoteActive(remote.name);
                 return (
@@ -374,33 +329,21 @@ export function AppSidebar() {
                       asChild
                       isActive={active}
                       tooltip={state === 'collapsed' ? remote.name : undefined}
-                      className={`
-                        group/item relative rounded-lg transition-all duration-200 ease-in-out
-                        ${
-                          active
-                            ? 'bg-primary/15 text-primary border-l-2 border-primary pl-2.5 font-medium'
-                            : 'hover:bg-primary/5 hover:text-primary active:scale-[0.98]'
-                        }
-                        ${state === 'collapsed' ? 'w-full justify-center p-3' : 'px-3 py-2 h-9'}
-                      `}
-                    >
+                      className={`group/item relative rounded-lg transition-all duration-200 ease-in-out ${
+                        active
+                          ? 'bg-primary/15 text-primary border-primary border-l-2 pl-2.5 font-medium'
+                          : 'hover:bg-primary/5 hover:text-primary active:scale-[0.98]'
+                      } ${state === 'collapsed' ? 'w-full justify-center p-3' : 'h-9 px-3 py-2'} `}>
                       <Link
                         to={`/configs?search=${encodeURIComponent(remote.name)}`}
-                        className="flex items-center w-full"
-                      >
+                        className="flex w-full items-center">
                         <RemoteIcon
-                          className={`
-                            shrink-0 transition-transform duration-200
-                            ${state === 'collapsed' ? 'size-5' : 'size-3.5 mr-2.5'}
-                            group-hover/item:scale-110
-                          `}
+                          className={`shrink-0 transition-transform duration-200 ${state === 'collapsed' ? 'size-5' : 'mr-2.5 size-3.5'} group-hover/item:scale-110`}
                         />
                         {state === 'expanded' && (
-                          <div className="flex items-center justify-between w-full min-w-0">
-                            <span className="text-xs font-semibold truncate">
-                              {remote.name}
-                            </span>
-                            <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-muted/60 text-muted-foreground scale-90 origin-right font-medium">
+                          <div className="flex w-full min-w-0 items-center justify-between">
+                            <span className="truncate text-xs font-semibold">{remote.name}</span>
+                            <span className="py-0.2 bg-muted/60 text-muted-foreground origin-right scale-90 rounded px-1 font-mono text-[9px] font-medium">
                               {remote.type}
                             </span>
                           </div>
@@ -419,12 +362,12 @@ export function AppSidebar() {
         {/* Tools Section */}
         <div>
           {state === 'expanded' && (
-            <p className="px-3 mb-2 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+            <p className="text-muted-foreground/70 mb-2 px-3 text-[10px] font-semibold tracking-widest uppercase">
               {t('Tools')}
             </p>
           )}
           <SidebarMenu className="space-y-1">
-            {toolNavItems.map((item) => {
+            {toolNavItems.map(item => {
               const active = isLinkActive(item.url);
               return (
                 <SidebarMenuItem key={item.title}>
@@ -432,47 +375,31 @@ export function AppSidebar() {
                     asChild
                     isActive={active}
                     tooltip={state === 'collapsed' ? item.title : undefined}
-                    className={`
-                      group/item relative overflow-hidden rounded-xl transition-all duration-200 ease-in-out
-                      ${
-                        active
-                          ? 'bg-gradient-to-r from-primary to-blue-600 text-primary-foreground shadow-md shadow-primary/20 scale-[1.01]'
-                          : 'hover:bg-primary/10 hover:text-primary active:scale-[0.98]'
-                      }
-                      ${state === 'collapsed' ? 'w-full justify-center p-3' : 'p-3'}
-                    `}
-                  >
+                    className={`group/item relative overflow-hidden rounded-xl transition-all duration-200 ease-in-out ${
+                      active
+                        ? 'from-primary text-primary-foreground shadow-primary/20 scale-[1.01] bg-gradient-to-r to-blue-600 shadow-md'
+                        : 'hover:bg-primary/10 hover:text-primary active:scale-[0.98]'
+                    } ${state === 'collapsed' ? 'w-full justify-center p-3' : 'p-3'} `}>
                     <Link
                       to={item.url}
-                      className={`
-                        flex items-center w-full transition-all duration-200
-                        ${state === 'collapsed' ? 'justify-center' : 'gap-3'}
-                      `}
-                    >
+                      className={`flex w-full items-center transition-all duration-200 ${state === 'collapsed' ? 'justify-center' : 'gap-3'} `}>
                       {!active && (
-                        <div className="absolute left-[3px] top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-full bg-primary opacity-0 group-hover/item:opacity-100 transition-all duration-200" />
+                        <div className="bg-primary absolute top-1/2 left-[3px] h-4 w-[3px] -translate-y-1/2 rounded-full opacity-0 transition-all duration-200 group-hover/item:opacity-100" />
                       )}
 
                       <item.icon
-                        className={`
-                          transition-all duration-200 shrink-0
-                          ${state === 'collapsed' ? 'size-5' : 'size-4'}
-                          group-hover/item:scale-110
-                        `}
+                        className={`shrink-0 transition-all duration-200 ${state === 'collapsed' ? 'size-5' : 'size-4'} group-hover/item:scale-110`}
                       />
                       {state === 'expanded' && (
-                        <div className="flex items-center justify-between w-full min-w-0">
-                          <span className="font-semibold text-sm truncate text-left">
-                            {item.title}
-                          </span>
+                        <div className="flex w-full min-w-0 items-center justify-between">
+                          <span className="truncate text-left text-sm font-semibold">{item.title}</span>
                           {item.badge && (
                             <span
-                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
+                              className={`rounded-full border px-1.5 py-0.5 text-[9px] font-bold ${
                                 active
                                   ? 'bg-primary-foreground/20 text-primary-foreground border-primary-foreground/10'
-                                  : 'bg-primary/20 text-primary border border-primary/10'
-                              }`}
-                            >
+                                  : 'bg-primary/20 text-primary border-primary/10 border'
+                              }`}>
                               {item.badge}
                             </span>
                           )}
@@ -488,36 +415,31 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* Footer / Connection Card / Utility toolbar */}
-      <SidebarFooter className="p-3 border-t border-border/40 space-y-3 bg-muted/10">
+      <SidebarFooter className="border-border/40 bg-muted/10 space-y-3 border-t p-3">
         {/* Rclone Connection Status Card - Expanded mode only */}
         {state === 'expanded' && (
-          <div className="p-3 rounded-xl border border-border/50 bg-muted/40 backdrop-blur-sm shadow-inner text-xs space-y-2.5 animate-fade-in hover:border-primary/30 transition-all duration-300">
+          <div className="border-border/50 bg-muted/40 animate-fade-in hover:border-primary/30 space-y-2.5 rounded-xl border p-3 text-xs shadow-inner backdrop-blur-sm transition-all duration-300">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              <span className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
                 {t('System Status')}
               </span>
-              <CircleDot className="size-3.5 text-emerald-500 animate-pulse" />
+              <CircleDot className="size-3.5 animate-pulse text-emerald-500" />
             </div>
 
-            <div className="space-y-1 font-mono text-[10px] text-muted-foreground/90">
+            <div className="text-muted-foreground/90 space-y-1 font-mono text-[10px]">
               <div className="flex items-center justify-between">
                 <span>{t('Endpoint')}:</span>
-                <span className="truncate max-w-[120px] font-semibold text-foreground">
-                  {cleanRcHost}
-                </span>
+                <span className="text-foreground max-w-[120px] truncate font-semibold">{cleanRcHost}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>{t('Speed Limit')}:</span>
-                <span className="text-foreground font-semibold">
-                  {t('Unlimited')}
-                </span>
+                <span className="text-foreground font-semibold">{t('Unlimited')}</span>
               </div>
 
               {/* Traffic details */}
-              <div className="flex items-center justify-between pt-1 border-t border-border/20 text-[9px]">
+              <div className="border-border/20 flex items-center justify-between border-t pt-1 text-[9px]">
                 <span className="flex items-center gap-0.5">
-                  <span className="text-emerald-500">↓</span>{' '}
-                  {simulatedSpeed.down}
+                  <span className="text-emerald-500">↓</span> {simulatedSpeed.down}
                 </span>
                 <span className="flex items-center gap-0.5">
                   <span className="text-blue-500">↑</span> {simulatedSpeed.up}
@@ -529,21 +451,15 @@ export function AppSidebar() {
 
         {/* Global actions bar */}
         <div
-          className={`flex ${state === 'collapsed' ? 'flex-col gap-3 items-center' : 'items-center justify-between'} px-1`}
-        >
+          className={`flex ${state === 'collapsed' ? 'flex-col items-center gap-3' : 'items-center justify-between'} px-1`}>
           {/* Theme Switcher */}
           {mounted && (
             <button
               type="button"
               onClick={toggleTheme}
               title={t('Theme')}
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none transition-all duration-200 cursor-pointer"
-            >
-              {theme === 'dark' ? (
-                <Sun className="size-4.5" />
-              ) : (
-                <Moon className="size-4.5" />
-              )}
+              className="text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer rounded-lg p-2 transition-all duration-200 focus:outline-none">
+              {theme === 'dark' ? <Sun className="size-4.5" /> : <Moon className="size-4.5" />}
             </button>
           )}
 
@@ -552,13 +468,10 @@ export function AppSidebar() {
             type="button"
             onClick={toggleLanguage}
             title={t('Language')}
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none transition-all duration-200 flex items-center justify-center cursor-pointer text-[11px] font-bold font-mono gap-1"
-          >
+            className="text-muted-foreground hover:text-foreground hover:bg-muted flex cursor-pointer items-center justify-center gap-1 rounded-lg p-2 font-mono text-[11px] font-bold transition-all duration-200 focus:outline-none">
             <Globe className="size-4.5" />
             {state === 'expanded' && (
-              <span className="scale-90 opacity-80">
-                {i18n.language === 'zh-CN' ? 'ZH' : 'EN'}
-              </span>
+              <span className="scale-90 opacity-80">{i18n.language === 'zh-CN' ? 'ZH' : 'EN'}</span>
             )}
           </button>
 
@@ -567,8 +480,7 @@ export function AppSidebar() {
             type="button"
             onClick={handleLogout}
             title={t('Logout')}
-            className="p-2 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 focus:outline-none transition-all duration-200 cursor-pointer"
-          >
+            className="text-muted-foreground cursor-pointer rounded-lg p-2 transition-all duration-200 hover:bg-red-500/10 hover:text-red-500 focus:outline-none">
             <LogOut className="size-4.5" />
           </button>
         </div>

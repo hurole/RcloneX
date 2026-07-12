@@ -18,10 +18,7 @@ export interface ListResponse {
  * @param fs 远程存储名称，例如 "drive:"
  * @param remote 相对路径，例如 "documents/photos" (根目录传空字符串 "")
  */
-export const listDirectory = async (
-  fs: string,
-  remote: string,
-): Promise<RcloneFileItem[]> => {
+export const listDirectory = async (fs: string, remote: string): Promise<RcloneFileItem[]> => {
   try {
     const formattedFs = fs.endsWith(':') ? fs : `${fs}:`;
     const response = await net.post<ListResponse>({
@@ -41,10 +38,7 @@ export const listDirectory = async (
 /**
  * 创建文件夹
  */
-export const makeDirectory = async (
-  fs: string,
-  remote: string,
-): Promise<void> => {
+export const makeDirectory = async (fs: string, remote: string): Promise<void> => {
   try {
     const formattedFs = fs.endsWith(':') ? fs : `${fs}:`;
     await net.post({
@@ -82,10 +76,7 @@ export const deleteFile = async (fs: string, remote: string): Promise<void> => {
 /**
  * 删除文件夹及其内容
  */
-export const purgeDirectory = async (
-  fs: string,
-  remote: string,
-): Promise<void> => {
+export const purgeDirectory = async (fs: string, remote: string): Promise<void> => {
   try {
     const formattedFs = fs.endsWith(':') ? fs : `${fs}:`;
     await net.post({

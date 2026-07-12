@@ -14,17 +14,10 @@ import {
   Trash2,
   Wifi,
 } from 'lucide-react';
-import React, {
-  useState,
-  useMemo,
-  useEffect,
-  useCallback,
-  useRef,
-} from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -43,23 +36,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // 导入服务
-import {
-  type RcloneConfig,
-  createConfig,
-  deleteConfig,
-  getAllConfigs,
-  testConfig,
-  updateConfig,
-} from './services';
+import { type RcloneConfig, createConfig, deleteConfig, getAllConfigs, testConfig, updateConfig } from './services';
 
 // 配置类型定义
 interface ConfigFormData {
@@ -289,9 +268,7 @@ export default function Configs() {
   const [searchParams] = useSearchParams();
   const [configs, setConfigs] = useState<RcloneConfig[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(
-    searchParams.get('search') || '',
-  );
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
 
   // 测试连接状态
   const [testStates, setTestStates] = useState<
@@ -319,7 +296,7 @@ export default function Configs() {
 
   // 测试配置连接
   const handleTestConnection = async (configName: string) => {
-    setTestStates((prev) => ({
+    setTestStates(prev => ({
       ...prev,
       [configName]: { status: 'testing' },
     }));
@@ -327,7 +304,7 @@ export default function Configs() {
     try {
       const result = await testConfig(configName);
       if (result.success) {
-        setTestStates((prev) => ({
+        setTestStates(prev => ({
           ...prev,
           [configName]: {
             status: 'success',
@@ -338,19 +315,17 @@ export default function Configs() {
         }));
         toast.success(`${t('config.testSuccess')}: ${configName}`);
       } else {
-        setTestStates((prev) => ({
+        setTestStates(prev => ({
           ...prev,
           [configName]: {
             status: 'failed',
             error: result.error,
           },
         }));
-        toast.error(
-          `${t('config.testFailed')}: ${result.error || 'Unknown error'}`,
-        );
+        toast.error(`${t('config.testFailed')}: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
-      setTestStates((prev) => ({
+      setTestStates(prev => ({
         ...prev,
         [configName]: {
           status: 'failed',
@@ -368,9 +343,7 @@ export default function Configs() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedConfig, setSelectedConfig] = useState<RcloneConfig | null>(
-    null,
-  );
+  const [selectedConfig, setSelectedConfig] = useState<RcloneConfig | null>(null);
   const [formData, setFormData] = useState<ConfigFormData>({
     name: '',
     type: '',
@@ -399,9 +372,7 @@ export default function Configs() {
       console.log('成功获取配置列表:', configList);
 
       setConfigs(configList);
-      window.dispatchEvent(
-        new CustomEvent('rclone-configs-updated', { detail: configList }),
-      );
+      window.dispatchEvent(new CustomEvent('rclone-configs-updated', { detail: configList }));
 
       if (configList.length === 0) {
         toast.info('当前没有配置，请添加您的第一个配置');
@@ -410,9 +381,7 @@ export default function Configs() {
       }
     } catch (error) {
       console.error('获取配置失败:', error);
-      toast.error(
-        `获取配置列表失败: ${error instanceof Error ? error.message : '未知错误'}`,
-      );
+      toast.error(`获取配置列表失败: ${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
       setLoading(false);
       isLoadingRef.current = false;
@@ -428,7 +397,7 @@ export default function Configs() {
   // 过滤配置
   const filteredConfigs = useMemo(() => {
     const filtered = configs.filter(
-      (config) =>
+      config =>
         config.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         config.type.toLowerCase().includes(searchTerm.toLowerCase()),
     );
@@ -437,20 +406,18 @@ export default function Configs() {
 
   // 获取配置类型图标
   const getConfigTypeIcon = (type: string) => {
-    const configType = CONFIG_TYPES.find((t) => t.value === type);
+    const configType = CONFIG_TYPES.find(t => t.value === type);
     return configType?.icon || Settings;
   };
 
   // 获取配置类型标签
   const getConfigTypeLabel = (type: string) => {
-    const configType = CONFIG_TYPES.find((t) => t.value === type);
+    const configType = CONFIG_TYPES.find(t => t.value === type);
     return configType ? t(configType.label) : type;
   };
 
   // 获取配置的关键信息
-  const getConfigKeyInfo = (
-    config: RcloneConfig,
-  ): Array<{ key: string; value: string; title?: string }> => {
+  const getConfigKeyInfo = (config: RcloneConfig): Array<{ key: string; value: string; title?: string }> => {
     if (!config.config) return [];
 
     const configData = config.config as Record<string, unknown>;
@@ -575,10 +542,7 @@ export default function Configs() {
     for (const key of Object.keys(existingParams)) {
       if (typeof existingParams[key] === 'string') {
         parameters[key] = existingParams[key] as string;
-      } else if (
-        existingParams[key] !== null &&
-        existingParams[key] !== undefined
-      ) {
+      } else if (existingParams[key] !== null && existingParams[key] !== undefined) {
         parameters[key] = String(existingParams[key]);
       }
     }
@@ -599,7 +563,7 @@ export default function Configs() {
 
   // 处理参数变化
   const handleParameterChange = (key: string, value: string) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       parameters: {
         ...prev.parameters,
@@ -630,7 +594,7 @@ export default function Configs() {
   // 处理配置类型变化
   const handleTypeChange = (type: string) => {
     const defaultParams = initializeDefaultParameters(type);
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       type,
       parameters: defaultParams,
@@ -664,10 +628,7 @@ export default function Configs() {
     try {
       if (selectedConfig) {
         // 编辑配置（注意：rclone 不支持修改名称和类型，只能更新参数）
-        if (
-          selectedConfig.name !== formData.name ||
-          selectedConfig.type !== formData.type
-        ) {
+        if (selectedConfig.name !== formData.name || selectedConfig.type !== formData.type) {
           toast.error('无法修改配置名称和类型，请删除后重新创建');
           return;
         }
@@ -689,11 +650,7 @@ export default function Configs() {
     } catch (error) {
       console.error('保存配置失败:', error);
       const errorMessage = error instanceof Error ? error.message : '未知错误';
-      toast.error(
-        selectedConfig
-          ? `更新配置失败: ${errorMessage}`
-          : `创建配置失败: ${errorMessage}`,
-      );
+      toast.error(selectedConfig ? `更新配置失败: ${errorMessage}` : `创建配置失败: ${errorMessage}`);
     } finally {
       setSubmitting(false);
     }
@@ -725,19 +682,11 @@ export default function Configs() {
       {/* 页面标题和操作栏 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {t('Configuration Management')}
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('Configuration Management')}</h1>
           <p className="text-muted-foreground mt-2">{t('config.desc')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={loadConfigs}
-            disabled={loading}
-            className="h-9 w-9"
-          >
+          <Button variant="outline" size="icon" onClick={loadConfigs} disabled={loading} className="h-9 w-9">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
           <Button onClick={handleAddConfig} className="gap-2">
@@ -749,12 +698,12 @@ export default function Configs() {
 
       {/* 搜索栏 */}
       <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <div className="relative max-w-sm flex-1">
+          <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
           <Input
             placeholder={t('config.searchPlaceholder')}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             className="pl-8"
           />
         </div>
@@ -762,26 +711,23 @@ export default function Configs() {
 
       {/* 配置卡片网格 */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }, () => {
             const skeletonId = Math.random().toString(36).substr(2, 9);
             return (
-              <Card
-                key={`loading-skeleton-${skeletonId}`}
-                className="animate-pulse"
-              >
+              <Card key={`loading-skeleton-${skeletonId}`} className="animate-pulse">
                 <CardHeader>
                   <div className="flex items-center space-x-3">
-                    <div className="w-9 h-9 bg-muted rounded-lg" />
-                    <div className="space-y-2 flex-1">
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-3 bg-muted rounded w-1/2" />
+                    <div className="bg-muted h-9 w-9 rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <div className="bg-muted h-4 w-3/4 rounded" />
+                      <div className="bg-muted h-3 w-1/2 rounded" />
                     </div>
                   </div>
                   <div className="mt-4 space-y-2">
-                    <div className="h-3 bg-muted rounded" />
-                    <div className="h-3 bg-muted rounded w-4/5" />
-                    <div className="h-3 bg-muted rounded w-3/5" />
+                    <div className="bg-muted h-3 rounded" />
+                    <div className="bg-muted h-3 w-4/5 rounded" />
+                    <div className="bg-muted h-3 w-3/5 rounded" />
                   </div>
                 </CardHeader>
               </Card>
@@ -789,54 +735,52 @@ export default function Configs() {
           })}
         </div>
       ) : filteredConfigs.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredConfigs.map((config) => {
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredConfigs.map(config => {
             const IconComponent = getConfigTypeIcon(config.type);
             const testState = testStates[config.name] || { status: 'idle' };
             return (
               <Card
                 key={config.id}
-                className="group relative transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1.5 border border-border/50 bg-card/60 backdrop-blur-md rounded-2xl flex flex-col justify-between overflow-hidden"
-              >
+                className="group hover:shadow-primary/5 border-border/50 bg-card/60 relative flex flex-col justify-between overflow-hidden rounded-2xl border backdrop-blur-md transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl">
                 {/* 悬浮时的顶部柔和渐变背景，使卡片具有发光的生命感 */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                <div className="from-primary/5 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent to-transparent opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
 
                 {/* 装饰性背景柔和发光圆，随hover变化 */}
-                <div className="absolute -right-12 -top-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 group-hover:scale-125 transition-all duration-700 pointer-events-none" />
+                <div className="bg-primary/10 group-hover:bg-primary/20 pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full blur-3xl transition-all duration-700 group-hover:scale-125" />
 
-                <div className="p-6 relative z-10 flex-1 flex flex-col">
+                <div className="relative z-10 flex flex-1 flex-col p-6">
                   {/* 卡片头部：图标、名称、状态与设置下拉菜单 */}
-                  <div className="flex items-start justify-between gap-4 mb-5">
-                    <div className="flex items-center space-x-3.5 flex-1 min-w-0">
+                  <div className="mb-5 flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 flex-1 items-center space-x-3.5">
                       {/* 渐变磨砂图标底色 */}
-                      <div className="p-3 rounded-2xl bg-gradient-to-tr from-primary/10 to-primary/5 border border-primary/15 group-hover:from-primary/20 group-hover:to-primary/10 transition-colors duration-500 shadow-sm">
-                        <IconComponent className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-500" />
+                      <div className="from-primary/10 to-primary/5 border-primary/15 group-hover:from-primary/20 group-hover:to-primary/10 rounded-2xl border bg-gradient-to-tr p-3 shadow-sm transition-colors duration-500">
+                        <IconComponent className="text-primary h-6 w-6 transition-transform duration-500 group-hover:scale-110" />
                       </div>
-                      <div className="space-y-1 flex-1 min-w-0">
-                        <CardTitle className="text-lg font-bold tracking-tight text-foreground/95 truncate">
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <CardTitle className="text-foreground/95 truncate text-lg font-bold tracking-tight">
                           {config.name}
                         </CardTitle>
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-primary/10 text-primary border border-primary/10">
+                          <span className="bg-primary/10 text-primary border-primary/10 inline-flex items-center rounded-md border px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase">
                             {getConfigTypeLabel(config.type)}
                           </span>
 
                           {/* 状态呼吸灯与文字 */}
                           {testState.status !== 'idle' && (
                             <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-colors duration-300 ${
+                              className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold transition-colors duration-300 ${
                                 testState.status === 'testing'
-                                  ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                                  ? 'border-yellow-500/20 bg-yellow-500/10 text-yellow-500'
                                   : testState.status === 'success'
-                                    ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                    : 'bg-red-500/10 text-red-500 border-red-500/20'
+                                    ? 'border-green-500/20 bg-green-500/10 text-green-500'
+                                    : 'border-red-500/20 bg-red-500/10 text-red-500'
                               }`}
-                              title={testState.error}
-                            >
+                              title={testState.error}>
                               <span
-                                className={`w-1.5 h-1.5 rounded-full ${
+                                className={`h-1.5 w-1.5 rounded-full ${
                                   testState.status === 'testing'
-                                    ? 'bg-yellow-500 animate-pulse'
+                                    ? 'animate-pulse bg-yellow-500'
                                     : testState.status === 'success'
                                       ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]'
                                       : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'
@@ -858,30 +802,26 @@ export default function Configs() {
                       <DropdownMenu
                         key={`dropdown-${config.id}`}
                         open={openDropdownId === config.id}
-                        onOpenChange={(open) => {
+                        onOpenChange={open => {
                           setOpenDropdownId(open ? config.id : null);
-                        }}
-                      >
+                        }}>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 rounded-full border border-transparent hover:border-border hover:bg-muted/50 transition-all animate-in fade-in"
-                          >
-                            <Settings className="h-4 w-4 text-muted-foreground/80 group-hover:text-foreground" />
+                            className="hover:border-border hover:bg-muted/50 animate-in fade-in h-8 w-8 rounded-full border border-transparent transition-all">
+                            <Settings className="text-muted-foreground/80 group-hover:text-foreground h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                           align="end"
-                          className="backdrop-blur-md bg-popover/95 border border-border/60"
-                        >
+                          className="bg-popover/95 border-border/60 border backdrop-blur-md">
                           <DropdownMenuItem
                             onClick={() => {
                               setOpenDropdownId(null);
                               handleEditConfig(config);
                             }}
-                            className="cursor-pointer"
-                          >
+                            className="cursor-pointer">
                             <Edit className="mr-2 h-4 w-4" />
                             {t('Edit')}
                           </DropdownMenuItem>
@@ -890,8 +830,7 @@ export default function Configs() {
                               setOpenDropdownId(null);
                               handleDeleteConfig(config);
                             }}
-                            className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-500/10"
-                          >
+                            className="cursor-pointer text-red-600 focus:bg-red-500/10 focus:text-red-600">
                             <Trash2 className="mr-2 h-4 w-4" />
                             {t('Delete')}
                           </DropdownMenuItem>
@@ -901,40 +840,36 @@ export default function Configs() {
                   </div>
 
                   {/* 中间配置详情：以极其雅致的参数卡形式呈现 */}
-                  <div className="space-y-2.5 text-sm bg-muted/20 hover:bg-muted/30 border border-border/30 rounded-xl p-3.5 transition-all duration-300 flex-1">
+                  <div className="bg-muted/20 hover:bg-muted/30 border-border/30 flex-1 space-y-2.5 rounded-xl border p-3.5 text-sm transition-all duration-300">
                     {/* 显示关键配置信息 */}
                     {getConfigKeyInfo(config).map(({ key, value, title }) => (
-                      <div
-                        key={key}
-                        className="flex justify-between items-center gap-4"
-                      >
-                        <span className="font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/85 shrink-0">
+                      <div key={key} className="flex items-center justify-between gap-4">
+                        <span className="text-muted-foreground/85 shrink-0 text-[10px] font-semibold tracking-wider uppercase">
                           {key}
                         </span>
                         <span
-                          className="truncate text-xs font-mono font-semibold text-foreground/90 text-right"
-                          title={title || value}
-                        >
+                          className="text-foreground/90 truncate text-right font-mono text-xs font-semibold"
+                          title={title || value}>
                           {value}
                         </span>
                       </div>
                     ))}
 
-                    <div className="flex justify-between items-center gap-4">
-                      <span className="font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/85 shrink-0">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-muted-foreground/85 shrink-0 text-[10px] font-semibold tracking-wider uppercase">
                         {t('Created At')}
                       </span>
-                      <span className="text-xs text-foreground/80 font-semibold text-right">
+                      <span className="text-foreground/80 text-right text-xs font-semibold">
                         {formatDate(config.createdAt)}
                       </span>
                     </div>
 
                     {config.lastUsed && (
-                      <div className="flex justify-between items-center gap-4">
-                        <span className="font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/85 shrink-0">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-muted-foreground/85 shrink-0 text-[10px] font-semibold tracking-wider uppercase">
                           {t('config.lastUsed')}
                         </span>
-                        <span className="text-xs text-foreground/80 font-semibold text-right">
+                        <span className="text-foreground/80 text-right text-xs font-semibold">
                           {formatDate(config.lastUsed)}
                         </span>
                       </div>
@@ -943,41 +878,35 @@ export default function Configs() {
                 </div>
 
                 {/* 底部功能区：连接容量与测试连接按钮 */}
-                <div className="px-6 pb-6 pt-0 mt-auto relative z-10">
+                <div className="relative z-10 mt-auto px-6 pt-0 pb-6">
                   {/* 容量进度条 */}
-                  {testState.status === 'success' &&
-                    testState.total !== undefined &&
-                    testState.used !== undefined && (
-                      <div className="mb-4 space-y-2 bg-gradient-to-r from-primary/5 to-transparent p-3 rounded-xl border border-primary/10 shadow-sm animate-in slide-in-from-bottom-2 duration-300">
-                        <div className="flex justify-between text-[11px] font-bold text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Database className="h-3 w-3 text-primary" />
-                            {t('config.storageUsage')}
-                          </span>
-                          <span className="text-foreground/90 font-mono">
-                            {formatBytes(testState.used)} /{' '}
-                            {formatBytes(testState.total)} (
-                            {Math.round(
-                              (testState.used / testState.total) * 100,
-                            )}
-                            %)
-                          </span>
-                        </div>
-                        <progress
-                          value={testState.used}
-                          max={testState.total}
-                          className="w-full h-1.5 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-secondary/40 [&::-webkit-progress-value]:bg-gradient-to-r [&::-webkit-progress-value]:from-primary [&::-webkit-progress-value]:to-primary/65 [&::-moz-progress-bar]:bg-primary transition-all duration-500 shadow-inner"
-                        />
+                  {testState.status === 'success' && testState.total !== undefined && testState.used !== undefined && (
+                    <div className="from-primary/5 border-primary/10 animate-in slide-in-from-bottom-2 mb-4 space-y-2 rounded-xl border bg-gradient-to-r to-transparent p-3 shadow-sm duration-300">
+                      <div className="text-muted-foreground flex justify-between text-[11px] font-bold">
+                        <span className="flex items-center gap-1">
+                          <Database className="text-primary h-3 w-3" />
+                          {t('config.storageUsage')}
+                        </span>
+                        <span className="text-foreground/90 font-mono">
+                          {formatBytes(testState.used)} / {formatBytes(testState.total)} (
+                          {Math.round((testState.used / testState.total) * 100)}
+                          %)
+                        </span>
                       </div>
-                    )}
+                      <progress
+                        value={testState.used}
+                        max={testState.total}
+                        className="[&::-webkit-progress-bar]:bg-secondary/40 [&::-webkit-progress-value]:from-primary [&::-webkit-progress-value]:to-primary/65 [&::-moz-progress-bar]:bg-primary h-1.5 w-full overflow-hidden rounded-full shadow-inner transition-all duration-500 [&::-webkit-progress-value]:bg-gradient-to-r"
+                      />
+                    </div>
+                  )}
 
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleTestConnection(config.name)}
                     disabled={testState.status === 'testing'}
-                    className="w-full gap-2 transition-all duration-300 hover:bg-primary hover:text-primary-foreground group"
-                  >
+                    className="hover:bg-primary hover:text-primary-foreground group w-full gap-2 transition-all duration-300">
                     {testState.status === 'testing' ? (
                       <>
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -996,22 +925,14 @@ export default function Configs() {
           })}
         </div>
       ) : (
-        <div className="text-center py-12">
-          <Database className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            {t('config.noConfigsFound')}
-          </h3>
+        <div className="py-12 text-center">
+          <Database className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+          <h3 className="text-foreground mb-2 text-lg font-medium">{t('config.noConfigsFound')}</h3>
           <p className="text-muted-foreground mb-4">
-            {searchTerm
-              ? t('config.noMatchFound', { searchTerm })
-              : t('config.clickToAdd')}
+            {searchTerm ? t('config.noMatchFound', { searchTerm }) : t('config.clickToAdd')}
           </p>
           {!searchTerm && (
-            <Button
-              onClick={handleAddConfig}
-              variant="outline"
-              className="gap-2"
-            >
+            <Button onClick={handleAddConfig} variant="outline" className="gap-2">
               <Plus className="h-4 w-4" />
               {t('Add Configuration')}
             </Button>
@@ -1022,15 +943,14 @@ export default function Configs() {
       {/* 添加配置对话框 */}
       <Dialog
         open={isAddDialogOpen}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) {
             handleCancelAdd();
           } else {
             setIsAddDialogOpen(true);
           }
-        }}
-      >
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        }}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{t('Add Configuration')}</DialogTitle>
             <DialogDescription>{t('config.addConfigDesc')}</DialogDescription>
@@ -1041,9 +961,7 @@ export default function Configs() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
                 placeholder={t('config.inputConfigName')}
               />
             </div>
@@ -1054,7 +972,7 @@ export default function Configs() {
                   <SelectValue placeholder={t('config.selectConfigType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {CONFIG_TYPES.map((type) => (
+                  {CONFIG_TYPES.map(type => (
                     <SelectItem key={type.value} value={type.value}>
                       <div className="flex items-center gap-2">
                         <type.icon className="h-4 w-4" />
@@ -1070,28 +988,17 @@ export default function Configs() {
             {formData.type && getCurrentParameterTemplate().length > 0 && (
               <div className="grid gap-4">
                 <div className="border-t pt-4">
-                  <h4 className="text-sm font-medium mb-3">
-                    {t('config.configParams')}
-                  </h4>
-                  {getCurrentParameterTemplate().map((param) => (
-                    <div key={param.key} className="grid gap-2 mb-3">
+                  <h4 className="mb-3 text-sm font-medium">{t('config.configParams')}</h4>
+                  {getCurrentParameterTemplate().map(param => (
+                    <div key={param.key} className="mb-3 grid gap-2">
                       <Label htmlFor={`param-${param.key}`}>
                         {t(param.label)}
-                        {param.required && (
-                          <span className="text-red-500 ml-1">*</span>
-                        )}
+                        {param.required && <span className="ml-1 text-red-500">*</span>}
                       </Label>
                       {param.type === 'select' ? (
                         <Select
-                          value={
-                            formData.parameters[param.key] ||
-                            param.defaultValue ||
-                            ''
-                          }
-                          onValueChange={(value: string) =>
-                            handleParameterChange(param.key, value)
-                          }
-                        >
+                          value={formData.parameters[param.key] || param.defaultValue || ''}
+                          onValueChange={(value: string) => handleParameterChange(param.key, value)}>
                           <SelectTrigger>
                             <SelectValue
                               placeholder={t('config.selectPlaceholder', {
@@ -1100,11 +1007,8 @@ export default function Configs() {
                             />
                           </SelectTrigger>
                           <SelectContent>
-                            {param.options?.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
+                            {param.options?.map(option => (
+                              <SelectItem key={option.value} value={option.value}>
                                 {t(option.label)}
                               </SelectItem>
                             ))}
@@ -1113,20 +1017,10 @@ export default function Configs() {
                       ) : (
                         <Input
                           id={`param-${param.key}`}
-                          type={
-                            param.type === 'password'
-                              ? 'password'
-                              : param.type === 'number'
-                                ? 'number'
-                                : 'text'
-                          }
+                          type={param.type === 'password' ? 'password' : param.type === 'number' ? 'number' : 'text'}
                           value={formData.parameters[param.key] || ''}
-                          onChange={(e) =>
-                            handleParameterChange(param.key, e.target.value)
-                          }
-                          placeholder={
-                            param.placeholder ? t(param.placeholder) : ''
-                          }
+                          onChange={e => handleParameterChange(param.key, e.target.value)}
+                          placeholder={param.placeholder ? t(param.placeholder) : ''}
                           required={param.required}
                         />
                       )}
@@ -1137,29 +1031,17 @@ export default function Configs() {
             )}
 
             {/* OAuth 类型的提示 */}
-            {formData.type &&
-              ['drive', 'dropbox', 'onedrive', 'box'].includes(
-                formData.type,
-              ) && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    {t('config.oauthTip')}
-                  </p>
-                </div>
-              )}
+            {formData.type && ['drive', 'dropbox', 'onedrive', 'box'].includes(formData.type) && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+                <p className="text-sm text-blue-700 dark:text-blue-300">{t('config.oauthTip')}</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancelAdd}
-              disabled={submitting}
-            >
+            <Button variant="outline" onClick={handleCancelAdd} disabled={submitting}>
               {t('Cancel')}
             </Button>
-            <Button
-              onClick={handleSaveConfig}
-              disabled={!formData.name.trim() || !formData.type || submitting}
-            >
+            <Button onClick={handleSaveConfig} disabled={!formData.name.trim() || !formData.type || submitting}>
               {submitting ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -1176,15 +1058,14 @@ export default function Configs() {
       {/* 编辑配置对话框 */}
       <Dialog
         open={isEditDialogOpen}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) {
             handleCancelEdit();
           } else {
             setIsEditDialogOpen(true);
           }
-        }}
-      >
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        }}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{t('Edit Configuration')}</DialogTitle>
             <DialogDescription>{t('config.editConfigDesc')}</DialogDescription>
@@ -1195,28 +1076,20 @@ export default function Configs() {
               <Input
                 id="edit-name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
                 placeholder={t('config.inputConfigName')}
                 disabled={true}
               />
-              <p className="text-xs text-muted-foreground">
-                {t('config.nameCannotBeChanged')}
-              </p>
+              <p className="text-muted-foreground text-xs">{t('config.nameCannotBeChanged')}</p>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-type">{t('Configuration Type')}</Label>
-              <Select
-                value={formData.type}
-                onValueChange={handleTypeChange}
-                disabled={true}
-              >
+              <Select value={formData.type} onValueChange={handleTypeChange} disabled={true}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('config.selectConfigType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {CONFIG_TYPES.map((type) => (
+                  {CONFIG_TYPES.map(type => (
                     <SelectItem key={type.value} value={type.value}>
                       <div className="flex items-center gap-2">
                         <type.icon className="h-4 w-4" />
@@ -1226,37 +1099,24 @@ export default function Configs() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                {t('config.typeCannotBeChanged')}
-              </p>
+              <p className="text-muted-foreground text-xs">{t('config.typeCannotBeChanged')}</p>
             </div>
 
             {/* 动态参数编辑字段 */}
             {formData.type && getCurrentParameterTemplate().length > 0 && (
               <div className="grid gap-4">
                 <div className="border-t pt-4">
-                  <h4 className="text-sm font-medium mb-3">
-                    {t('config.configParams')}
-                  </h4>
-                  {getCurrentParameterTemplate().map((param) => (
-                    <div key={param.key} className="grid gap-2 mb-3">
+                  <h4 className="mb-3 text-sm font-medium">{t('config.configParams')}</h4>
+                  {getCurrentParameterTemplate().map(param => (
+                    <div key={param.key} className="mb-3 grid gap-2">
                       <Label htmlFor={`edit-param-${param.key}`}>
                         {t(param.label)}
-                        {param.required && (
-                          <span className="text-red-500 ml-1">*</span>
-                        )}
+                        {param.required && <span className="ml-1 text-red-500">*</span>}
                       </Label>
                       {param.type === 'select' ? (
                         <Select
-                          value={
-                            formData.parameters[param.key] ||
-                            param.defaultValue ||
-                            ''
-                          }
-                          onValueChange={(value: string) =>
-                            handleParameterChange(param.key, value)
-                          }
-                        >
+                          value={formData.parameters[param.key] || param.defaultValue || ''}
+                          onValueChange={(value: string) => handleParameterChange(param.key, value)}>
                           <SelectTrigger>
                             <SelectValue
                               placeholder={t('config.selectPlaceholder', {
@@ -1265,11 +1125,8 @@ export default function Configs() {
                             />
                           </SelectTrigger>
                           <SelectContent>
-                            {param.options?.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
+                            {param.options?.map(option => (
+                              <SelectItem key={option.value} value={option.value}>
                                 {t(option.label)}
                               </SelectItem>
                             ))}
@@ -1278,20 +1135,10 @@ export default function Configs() {
                       ) : (
                         <Input
                           id={`edit-param-${param.key}`}
-                          type={
-                            param.type === 'password'
-                              ? 'password'
-                              : param.type === 'number'
-                                ? 'number'
-                                : 'text'
-                          }
+                          type={param.type === 'password' ? 'password' : param.type === 'number' ? 'number' : 'text'}
                           value={formData.parameters[param.key] || ''}
-                          onChange={(e) =>
-                            handleParameterChange(param.key, e.target.value)
-                          }
-                          placeholder={
-                            param.placeholder ? t(param.placeholder) : ''
-                          }
+                          onChange={e => handleParameterChange(param.key, e.target.value)}
+                          placeholder={param.placeholder ? t(param.placeholder) : ''}
                           required={param.required}
                         />
                       )}
@@ -1302,17 +1149,10 @@ export default function Configs() {
             )}
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancelEdit}
-              disabled={submitting}
-            >
+            <Button variant="outline" onClick={handleCancelEdit} disabled={submitting}>
               {t('Cancel')}
             </Button>
-            <Button
-              onClick={handleSaveConfig}
-              disabled={!formData.name.trim() || !formData.type || submitting}
-            >
+            <Button onClick={handleSaveConfig} disabled={!formData.name.trim() || !formData.type || submitting}>
               {submitting ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -1329,54 +1169,39 @@ export default function Configs() {
       {/* 删除确认对话框 */}
       <Dialog
         open={isDeleteDialogOpen}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) {
             handleCancelDelete();
           } else {
             setIsDeleteDialogOpen(true);
           }
-        }}
-      >
+        }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{t('Delete Configuration')}</DialogTitle>
-            <DialogDescription>
-              {t('Are you sure you want to delete this configuration?')}
-            </DialogDescription>
+            <DialogDescription>{t('Are you sure you want to delete this configuration?')}</DialogDescription>
           </DialogHeader>
           {selectedConfig && (
             <div className="py-4">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
-                <div className="p-2 rounded-lg bg-primary/10">
+              <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
+                <div className="bg-primary/10 rounded-lg p-2">
                   {React.createElement(getConfigTypeIcon(selectedConfig.type), {
                     className: 'h-5 w-5 text-primary',
                   })}
                 </div>
                 <div>
                   <p className="font-medium">{selectedConfig.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {getConfigTypeLabel(selectedConfig.type)}
-                  </p>
+                  <p className="text-muted-foreground text-sm">{getConfigTypeLabel(selectedConfig.type)}</p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground mt-3">
-                {t('This action cannot be undone.')}
-              </p>
+              <p className="text-muted-foreground mt-3 text-sm">{t('This action cannot be undone.')}</p>
             </div>
           )}
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancelDelete}
-              disabled={submitting}
-            >
+            <Button variant="outline" onClick={handleCancelDelete} disabled={submitting}>
               {t('Cancel')}
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              disabled={submitting}
-            >
+            <Button variant="destructive" onClick={handleConfirmDelete} disabled={submitting}>
               {submitting ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />

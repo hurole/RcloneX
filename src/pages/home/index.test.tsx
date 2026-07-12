@@ -1,8 +1,8 @@
-import { net } from '@/shared/utils/net';
 import { render, screen, waitFor } from '@testing-library/react';
-import type React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { net } from '@/shared/utils/net';
 import Home from './index';
+import type React from 'react';
 
 // Mock net
 vi.mock('@/shared/utils/net', () => ({
@@ -29,9 +29,7 @@ vi.mock('@/components/ui/sidebar', () => ({
   SidebarProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="sidebar-provider">{children}</div>
   ),
-  SidebarInset: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-inset">{children}</div>
-  ),
+  SidebarInset: ({ children }: { children: React.ReactNode }) => <div data-testid="sidebar-inset">{children}</div>,
 }));
 
 describe('Home layout component', () => {

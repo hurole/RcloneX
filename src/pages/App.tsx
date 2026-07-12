@@ -1,6 +1,5 @@
 import Home from '@pages/home';
 import Login from '@pages/login';
-import type { FC } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router';
 import { Toaster } from 'sonner';
 import Config from './config';
@@ -9,6 +8,7 @@ import Explorer from './explorer';
 import Logs from './logs';
 import Mounts from './mounts';
 import Tasks from './tasks';
+import type { FC } from 'react';
 
 const App: FC = () => {
   return (

@@ -53,11 +53,7 @@ export const getMountTypes = async (): Promise<string[]> => {
  * @param mountPoint 本地挂载路径，如 "/Users/hurole/mount-dir" 或 "D:\\mount-dir"
  * @param mountType 挂载方式，默认 "mount"
  */
-export const createMount = async (
-  fs: string,
-  mountPoint: string,
-  mountType = 'mount',
-): Promise<void> => {
+export const createMount = async (fs: string, mountPoint: string, mountType = 'mount'): Promise<void> => {
   try {
     const formattedFs = fs.includes(':') ? fs : `${fs}:`;
     await net.post({

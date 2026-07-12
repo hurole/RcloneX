@@ -14,15 +14,8 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -33,23 +26,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type RcloneConfig, getAllConfigs } from '@/pages/config/services';
-import {
-  type RcloneCoreStats,
-  type RcloneJobItem,
-  getCoreStats,
-  getJobList,
-  startTransfer,
-  stopJob,
-} from './services';
+import { type RcloneCoreStats, type RcloneJobItem, getCoreStats, getJobList, startTransfer, stopJob } from './services';
 
 export default function Tasks() {
   const { t } = useTranslation();
@@ -75,10 +54,7 @@ export default function Tasks() {
   const loadData = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
-      const [statsData, jobsData] = await Promise.all([
-        getCoreStats(),
-        getJobList(),
-      ]);
+      const [statsData, jobsData] = await Promise.all([getCoreStats(), getJobList()]);
       setStats(statsData);
       setJobs(jobsData);
 
@@ -127,13 +103,7 @@ export default function Tasks() {
     }
     setStarting(true);
     try {
-      const res = await startTransfer(
-        taskType,
-        srcRemote,
-        srcPath,
-        dstRemote,
-        dstPath,
-      );
+      const res = await startTransfer(taskType, srcRemote, srcPath, dstRemote, dstPath);
       toast.success(`传输任务已成功在后台启动 (ID: ${res.jobid})`);
       setIsNewTaskOpen(false);
 
@@ -175,8 +145,7 @@ export default function Tasks() {
   };
 
   const formatEta = (seconds: number) => {
-    if (seconds === -1 || seconds === Number.POSITIVE_INFINITY || !seconds)
-      return 'Unknown';
+    if (seconds === -1 || seconds === Number.POSITIVE_INFINITY || !seconds) return 'Unknown';
     if (seconds < 60) return `${seconds}s`;
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -184,64 +153,49 @@ export default function Tasks() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
-      <div className="flex justify-between items-center">
+    <div className="animate-fade-in space-y-6 pb-10">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {t('Tasks')}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            监控实时传输流速，管理后台备份与同步作业历史。
-          </p>
+          <h1 className="text-foreground text-2xl font-bold tracking-tight">{t('Tasks')}</h1>
+          <p className="text-muted-foreground text-sm">监控实时传输流速，管理后台备份与同步作业历史。</p>
         </div>
-        <Button
-          onClick={() => setIsNewTaskOpen(true)}
-          className="rounded-lg cursor-pointer font-semibold shadow-md"
-        >
-          <Plus className="size-4 mr-2" />
+        <Button onClick={() => setIsNewTaskOpen(true)} className="cursor-pointer rounded-lg font-semibold shadow-md">
+          <Plus className="mr-2 size-4" />
           {t('Transfer Setup')}
         </Button>
       </div>
 
       {/* Stats Cards Row */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border border-border/50 shadow-sm bg-muted/20">
+        <Card className="border-border/50 bg-muted/20 border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <CardTitle className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
               {t('Global Speed')}
             </CardTitle>
-            <Gauge className="size-4.5 text-primary animate-pulse" />
+            <Gauge className="text-primary size-4.5 animate-pulse" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black font-mono">
-              {stats ? formatSpeed(stats.speed) : '0 B/s'}
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              全局实时网速监控
-            </p>
+            <div className="font-mono text-2xl font-black">{stats ? formatSpeed(stats.speed) : '0 B/s'}</div>
+            <p className="text-muted-foreground mt-1 text-[10px]">全局实时网速监控</p>
           </CardContent>
         </Card>
 
-        <Card className="border border-border/50 shadow-sm bg-muted/20">
+        <Card className="border-border/50 bg-muted/20 border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <CardTitle className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
               {t('Transferred Bytes')}
             </CardTitle>
-            <HardDrive className="size-4.5 text-muted-foreground" />
+            <HardDrive className="text-muted-foreground size-4.5" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black font-mono">
-              {stats ? formatBytes(stats.bytes) : '0 B'}
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              本次连接累计传输量
-            </p>
+            <div className="font-mono text-2xl font-black">{stats ? formatBytes(stats.bytes) : '0 B'}</div>
+            <p className="text-muted-foreground mt-1 text-[10px]">本次连接累计传输量</p>
           </CardContent>
         </Card>
 
-        <Card className="border border-border/50 shadow-sm bg-muted/20">
+        <Card className="border-border/50 bg-muted/20 border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <CardTitle className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
               进行中文件
             </CardTitle>
             <Loader2
@@ -249,72 +203,61 @@ export default function Tasks() {
             />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black font-mono">
-              {stats?.transfers ? stats.transfers.length : 0}
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              并发活跃文件写入计数
-            </p>
+            <div className="font-mono text-2xl font-black">{stats?.transfers ? stats.transfers.length : 0}</div>
+            <p className="text-muted-foreground mt-1 text-[10px]">并发活跃文件写入计数</p>
           </CardContent>
         </Card>
 
-        <Card className="border border-border/50 shadow-sm bg-muted/20">
+        <Card className="border-border/50 bg-muted/20 border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <CardTitle className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
               任务异常率
             </CardTitle>
-            <AlertCircle
-              className={`size-4.5 ${stats && stats.errors > 0 ? 'text-red-500' : 'text-emerald-500'}`}
-            />
+            <AlertCircle className={`size-4.5 ${stats && stats.errors > 0 ? 'text-red-500' : 'text-emerald-500'}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black font-mono">
-              {stats ? stats.errors : 0}
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              累计报错故障点
-            </p>
+            <div className="font-mono text-2xl font-black">{stats ? stats.errors : 0}</div>
+            <p className="text-muted-foreground mt-1 text-[10px]">累计报错故障点</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Active transfers grid progress */}
       {stats?.transfers && stats.transfers.length > 0 && (
-        <Card className="border border-border/50 shadow-sm overflow-hidden">
-          <CardHeader className="bg-primary/5 p-4 border-b border-primary/10">
-            <CardTitle className="text-sm font-bold text-primary flex items-center gap-2">
-              <Activity className="size-4.5 text-primary animate-pulse" />
+        <Card className="border-border/50 overflow-hidden border shadow-sm">
+          <CardHeader className="bg-primary/5 border-primary/10 border-b p-4">
+            <CardTitle className="text-primary flex items-center gap-2 text-sm font-bold">
+              <Activity className="text-primary size-4.5 animate-pulse" />
               {t('Active Transfers')}
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0 divide-y divide-border/20">
-            {stats.transfers.map((item) => (
-              <div key={item.name} className="p-4 space-y-2">
-                <div className="flex justify-between items-center text-xs gap-3">
-                  <span className="font-semibold text-foreground truncate max-w-[280px] sm:max-w-[400px]">
+          <CardContent className="divide-border/20 divide-y p-0">
+            {stats.transfers.map(item => (
+              <div key={item.name} className="space-y-2 p-4">
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-foreground max-w-[280px] truncate font-semibold sm:max-w-[400px]">
                     {item.name}
                   </span>
-                  <span className="font-mono text-muted-foreground/80 font-bold shrink-0">
+                  <span className="text-muted-foreground/80 shrink-0 font-mono font-bold">
                     {formatSpeed(item.speed)} | ETA: {formatEta(item.eta)}
                   </span>
                 </div>
 
                 {/* Progress bar */}
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 w-full bg-muted rounded-full overflow-hidden border border-border/20 shadow-inner">
+                  <div className="bg-muted border-border/20 h-2 w-full flex-1 overflow-hidden rounded-full border shadow-inner">
                     <div
-                      className="bg-gradient-to-r from-primary to-blue-500 h-full rounded-full transition-all duration-300"
+                      className="from-primary h-full rounded-full bg-gradient-to-r to-blue-500 transition-all duration-300"
                       style={{ width: `${item.percentage}%` }}
                     />
                   </div>
-                  <span className="text-[10px] font-bold font-mono text-foreground shrink-0 w-8 text-right">
+                  <span className="text-foreground w-8 shrink-0 text-right font-mono text-[10px] font-bold">
                     {item.percentage}%
                   </span>
                 </div>
 
-                <div className="text-[9px] text-muted-foreground/70 font-mono">
-                  Transferred: {formatBytes(item.bytes)} of{' '}
-                  {formatBytes(item.size)}
+                <div className="text-muted-foreground/70 font-mono text-[9px]">
+                  Transferred: {formatBytes(item.bytes)} of {formatBytes(item.size)}
                 </div>
               </div>
             ))}
@@ -323,49 +266,38 @@ export default function Tasks() {
       )}
 
       {/* Historical background jobs list */}
-      <Card className="border border-border/50 shadow-sm overflow-hidden">
-        <CardHeader className="bg-muted/20 p-4 border-b border-border/40 flex flex-row justify-between items-center">
+      <Card className="border-border/50 overflow-hidden border shadow-sm">
+        <CardHeader className="bg-muted/20 border-border/40 flex flex-row items-center justify-between border-b p-4">
           <div>
-            <CardTitle className="text-sm font-bold">
-              {t('Background Jobs')}
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Rclone 异步作业调度记录与运行反馈。
-            </CardDescription>
+            <CardTitle className="text-sm font-bold">{t('Background Jobs')}</CardTitle>
+            <CardDescription className="text-xs">Rclone 异步作业调度记录与运行反馈。</CardDescription>
           </div>
           <Button
             variant="outline"
             size="icon"
             onClick={() => loadData()}
-            className="h-8 w-8 rounded-lg cursor-pointer"
-            disabled={loading}
-          >
-            <RefreshCw
-              className={`size-3.5 ${loading ? 'animate-spin' : ''}`}
-            />
+            className="h-8 w-8 cursor-pointer rounded-lg"
+            disabled={loading}>
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </CardHeader>
 
-        <CardContent className="p-0 min-h-[300px] flex flex-col justify-between">
+        <CardContent className="flex min-h-[300px] flex-col justify-between p-0">
           {loading ? (
-            <div className="flex flex-col items-center justify-center flex-1 py-14 gap-2">
-              <Loader2 className="size-7 animate-spin text-primary" />
-              <span className="text-xs font-semibold text-muted-foreground">
-                加载历史任务列表中...
-              </span>
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 py-14">
+              <Loader2 className="text-primary size-7 animate-spin" />
+              <span className="text-muted-foreground text-xs font-semibold">加载历史任务列表中...</span>
             </div>
           ) : jobs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center flex-1 py-16 text-muted-foreground/50 italic gap-2">
-              <Clock className="size-10 opacity-30 text-muted-foreground" />
-              <span className="text-xs font-semibold">
-                暂无任何后台异步作业记录
-              </span>
+            <div className="text-muted-foreground/50 flex flex-1 flex-col items-center justify-center gap-2 py-16 italic">
+              <Clock className="text-muted-foreground size-10 opacity-30" />
+              <span className="text-xs font-semibold">暂无任何后台异步作业记录</span>
             </div>
           ) : (
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-left border-collapse text-xs">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full border-collapse text-left text-xs">
                 <thead>
-                  <tr className="border-b border-border/40 bg-muted/10 font-bold text-muted-foreground uppercase tracking-wider">
+                  <tr className="border-border/40 bg-muted/10 text-muted-foreground border-b font-bold tracking-wider uppercase">
                     <th className="p-3 pl-6">{t('Job ID')}</th>
                     <th className="p-3">{t('Task Type')}</th>
                     <th className="p-3">{t('Duration')}</th>
@@ -374,51 +306,31 @@ export default function Tasks() {
                     <th className="p-3 pr-6 text-right">操作</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/20">
-                  {jobs.map((job) => {
+                <tbody className="divide-border/20 divide-y">
+                  {jobs.map(job => {
                     const statusClass = job.finished
                       ? job.success
                         ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                         : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
                       : 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400 animate-pulse';
 
-                    const StatusIcon = job.finished
-                      ? job.success
-                        ? CheckCircle
-                        : AlertCircle
-                      : Loader2;
+                    const StatusIcon = job.finished ? (job.success ? CheckCircle : AlertCircle) : Loader2;
 
                     return (
-                      <tr
-                        key={job.id}
-                        className="hover:bg-muted/20 transition-colors font-medium"
-                      >
-                        <td className="p-3 pl-6 font-mono font-bold">
-                          {job.id}
-                        </td>
+                      <tr key={job.id} className="hover:bg-muted/20 font-medium transition-colors">
+                        <td className="p-3 pl-6 font-mono font-bold">{job.id}</td>
                         <td className="p-3">
-                          <span className="font-semibold text-foreground text-xs uppercase px-1.5 py-0.5 rounded bg-muted/65">
+                          <span className="text-foreground bg-muted/65 rounded px-1.5 py-0.5 text-xs font-semibold uppercase">
                             {job.group ? job.group.split('/')[0] : 'transfer'}
                           </span>
                         </td>
-                        <td className="p-3 font-mono font-semibold">
-                          {formatDuration(job.duration)}
-                        </td>
-                        <td className="p-3 text-muted-foreground">
-                          {new Date(job.startTime).toLocaleString()}
-                        </td>
+                        <td className="p-3 font-mono font-semibold">{formatDuration(job.duration)}</td>
+                        <td className="text-muted-foreground p-3">{new Date(job.startTime).toLocaleString()}</td>
                         <td className="p-3">
                           <div
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${statusClass}`}
-                          >
-                            <StatusIcon
-                              className={`size-3 shrink-0 ${!job.finished ? 'animate-spin' : ''}`}
-                            />
-                            {job.finished
-                              ? job.success
-                                ? t('Success')
-                                : t('Failed')
-                              : t('Running')}
+                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusClass}`}>
+                            <StatusIcon className={`size-3 shrink-0 ${!job.finished ? 'animate-spin' : ''}`} />
+                            {job.finished ? (job.success ? t('Success') : t('Failed')) : t('Running')}
                           </div>
                         </td>
                         <td className="p-3 pr-6 text-right">
@@ -427,9 +339,8 @@ export default function Tasks() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleStopJob(job.id)}
-                              className="h-7 px-2.5 rounded-md cursor-pointer text-red-600 hover:bg-red-50/15"
-                            >
-                              <XCircle className="size-3 mr-1.5" />
+                              className="h-7 cursor-pointer rounded-md px-2.5 text-red-600 hover:bg-red-50/15">
+                              <XCircle className="mr-1.5 size-3" />
                               {t('Action Stop')}
                             </Button>
                           )}
@@ -448,46 +359,38 @@ export default function Tasks() {
       <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle className="font-bold flex items-center gap-2">
-              <Play className="size-5 text-primary" />
+            <DialogTitle className="flex items-center gap-2 font-bold">
+              <Play className="text-primary size-5" />
               {t('Transfer Setup')}
             </DialogTitle>
-            <DialogDescription>
-              配置远程云盘之间的数据同步任务。Rclone
-              会自动在后台处理大文件传输。
-            </DialogDescription>
+            <DialogDescription>配置远程云盘之间的数据同步任务。Rclone 会自动在后台处理大文件传输。</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {/* Task Type selector */}
             <div className="grid gap-2">
-              <Label className="font-bold text-sm">{t('Task Type')}</Label>
+              <Label className="text-sm font-bold">{t('Task Type')}</Label>
               <div className="grid grid-cols-3 gap-2">
-                {(['copy', 'sync', 'move'] as const).map((type) => (
+                {(['copy', 'sync', 'move'] as const).map(type => (
                   <button
                     key={type}
                     type="button"
                     onClick={() => setTaskType(type)}
-                    className={`px-3 py-2 border rounded-xl font-bold text-xs capitalize cursor-pointer transition-all duration-200 ${
+                    className={`cursor-pointer rounded-xl border px-3 py-2 text-xs font-bold capitalize transition-all duration-200 ${
                       taskType === type
-                        ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/5'
+                        ? 'border-primary bg-primary/10 text-primary shadow-primary/5 shadow-sm'
                         : 'border-border/60 hover:bg-muted/30 text-muted-foreground'
-                    }`}
-                  >
-                    {type === 'copy'
-                      ? t('Task Copy')
-                      : type === 'sync'
-                        ? t('Task Sync')
-                        : t('Task Move')}
+                    }`}>
+                    {type === 'copy' ? t('Task Copy') : type === 'sync' ? t('Task Sync') : t('Task Move')}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Source configuration */}
-              <div className="space-y-2.5 p-3.5 border border-border/40 rounded-xl bg-muted/10">
-                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+              <div className="border-border/40 bg-muted/10 space-y-2.5 rounded-xl border p-3.5">
+                <h4 className="text-muted-foreground flex items-center gap-1.5 text-xs font-black tracking-widest uppercase">
                   <span className="size-2 rounded-full bg-blue-500" />
                   数据源端 (Source)
                 </h4>
@@ -496,19 +399,12 @@ export default function Tasks() {
                     选择源存储
                   </Label>
                   <Select value={srcRemote} onValueChange={setSrcRemote}>
-                    <SelectTrigger
-                      id="src-remote"
-                      className="w-full font-semibold"
-                    >
+                    <SelectTrigger id="src-remote" className="w-full font-semibold">
                       <SelectValue placeholder="源云盘" />
                     </SelectTrigger>
                     <SelectContent>
-                      {remotes.map((remote) => (
-                        <SelectItem
-                          key={remote.name}
-                          value={remote.name}
-                          className="font-semibold"
-                        >
+                      {remotes.map(remote => (
+                        <SelectItem key={remote.name} value={remote.name} className="font-semibold">
                           {remote.name}
                         </SelectItem>
                       ))}
@@ -522,17 +418,17 @@ export default function Tasks() {
                   <Input
                     id="src-path"
                     value={srcPath}
-                    onChange={(e) => setSrcPath(e.target.value)}
+                    onChange={e => setSrcPath(e.target.value)}
                     placeholder="源目录，空代表根目录"
                     disabled={starting}
-                    className="font-medium h-9 text-xs"
+                    className="h-9 text-xs font-medium"
                   />
                 </div>
               </div>
 
               {/* Destination configuration */}
-              <div className="space-y-2.5 p-3.5 border border-border/40 rounded-xl bg-muted/10">
-                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+              <div className="border-border/40 bg-muted/10 space-y-2.5 rounded-xl border p-3.5">
+                <h4 className="text-muted-foreground flex items-center gap-1.5 text-xs font-black tracking-widest uppercase">
                   <span className="size-2 rounded-full bg-emerald-500" />
                   目的接收端 (Destination)
                 </h4>
@@ -541,19 +437,12 @@ export default function Tasks() {
                     选择目标存储
                   </Label>
                   <Select value={dstRemote} onValueChange={setDstRemote}>
-                    <SelectTrigger
-                      id="dst-remote"
-                      className="w-full font-semibold"
-                    >
+                    <SelectTrigger id="dst-remote" className="w-full font-semibold">
                       <SelectValue placeholder="目标云盘" />
                     </SelectTrigger>
                     <SelectContent>
-                      {remotes.map((remote) => (
-                        <SelectItem
-                          key={remote.name}
-                          value={remote.name}
-                          className="font-semibold"
-                        >
+                      {remotes.map(remote => (
+                        <SelectItem key={remote.name} value={remote.name} className="font-semibold">
                           {remote.name}
                         </SelectItem>
                       ))}
@@ -567,10 +456,10 @@ export default function Tasks() {
                   <Input
                     id="dst-path"
                     value={dstPath}
-                    onChange={(e) => setDstPath(e.target.value)}
+                    onChange={e => setDstPath(e.target.value)}
                     placeholder="目标目录，空代表根目录"
                     disabled={starting}
-                    className="font-medium h-9 text-xs"
+                    className="h-9 text-xs font-medium"
                   />
                 </div>
               </div>
@@ -578,8 +467,8 @@ export default function Tasks() {
 
             {/* Quick alert details */}
             {taskType === 'sync' && (
-              <div className="flex items-start gap-2.5 p-3 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-400 text-xs font-medium leading-normal">
-                <AlertCircle className="size-4 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs leading-normal font-medium text-amber-600 dark:text-amber-400">
+                <AlertCircle className="mt-0.5 size-4 shrink-0" />
                 <span>
                   <strong>重要提示：</strong>同步操作 (Sync)
                   会使目标目录的数据结构与源目录完全一致。如果目标目录存在非源目录含有的多余文件，这些文件会被
@@ -595,16 +484,14 @@ export default function Tasks() {
               variant="outline"
               onClick={() => setIsNewTaskOpen(false)}
               disabled={starting}
-              className="cursor-pointer"
-            >
+              className="cursor-pointer">
               {t('Cancel')}
             </Button>
             <Button
               type="button"
               onClick={handleStartTask}
               disabled={starting || !srcRemote || !dstRemote}
-              className="cursor-pointer font-bold bg-primary text-primary-foreground hover:bg-primary/95"
-            >
+              className="bg-primary text-primary-foreground hover:bg-primary/95 cursor-pointer font-bold">
               {starting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

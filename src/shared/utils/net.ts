@@ -1,9 +1,4 @@
-import axios, {
-  type AxiosInstance,
-  type AxiosRequestConfig,
-  type AxiosResponse,
-  type AxiosError,
-} from 'axios';
+import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios';
 
 /**
  * RcloneX 网络请求客户端类
@@ -42,11 +37,11 @@ class NetworkClient {
    */
   private setupRequestInterceptor(): void {
     this.axiosInstance.interceptors.request.use(
-      (config) => {
+      config => {
         this.setAuthenticationHeaders(config);
         return config;
       },
-      (error) => Promise.reject(error),
+      error => Promise.reject(error),
     );
   }
 
@@ -56,7 +51,7 @@ class NetworkClient {
   private setupResponseInterceptor(): void {
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => response.data,
-      (error) => {
+      error => {
         this.handleResponseError(error);
         return Promise.reject(error);
       },

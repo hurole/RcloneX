@@ -42,9 +42,7 @@ describe('useUser hook', () => {
 
     const expectedUser = { name: 'Jane', email: 'jane@example.com' };
     expect(result.current.user).toEqual(expectedUser);
-    expect(JSON.parse(localStorage.getItem('rclone-user') || '')).toEqual(
-      expectedUser,
-    );
+    expect(JSON.parse(localStorage.getItem('rclone-user') || '')).toEqual(expectedUser);
   });
 
   it('should clear user and remove from localStorage', () => {

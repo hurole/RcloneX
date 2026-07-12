@@ -1,5 +1,5 @@
-import { net } from '@/shared/utils/net';
 import axios from 'axios';
+import { net } from '@/shared/utils/net';
 
 // Rclone 配置接口类型定义
 export interface RcloneConfigResponse {
@@ -79,9 +79,7 @@ export const getAllConfigs = async (): Promise<RcloneConfig[]> => {
     // 如果 listremotes 失败，尝试使用 config/dump 作为备用方案
     console.log('尝试使用 config/dump 作为备用方案...');
     try {
-      const dumpResponse = await net.post<
-        RcloneApiResponse<RcloneConfigResponse>
-      >({
+      const dumpResponse = await net.post<RcloneApiResponse<RcloneConfigResponse>>({
         url: '/config/dump',
         data: {},
       });
@@ -111,9 +109,7 @@ export const getAllConfigs = async (): Promise<RcloneConfig[]> => {
       return configs;
     } catch (dumpError) {
       console.error('config/dump 也失败:', dumpError);
-      throw new Error(
-        `无法获取配置列表: ${error instanceof Error ? error.message : '未知错误'}`,
-      );
+      throw new Error(`无法获取配置列表: ${error instanceof Error ? error.message : '未知错误'}`);
     }
   }
 };
@@ -121,9 +117,7 @@ export const getAllConfigs = async (): Promise<RcloneConfig[]> => {
 /**
  * 获取单个配置详情
  */
-export const getConfigDetails = async (
-  configName: string,
-): Promise<RcloneConfig | null> => {
+export const getConfigDetails = async (configName: string): Promise<RcloneConfig | null> => {
   try {
     console.log(`开始获取配置 ${configName} 的详情...`);
 
@@ -226,10 +220,7 @@ export const createConfig = async (
 /**
  * 更新配置
  */
-export const updateConfig = async (
-  name: string,
-  parameters: Record<string, unknown>,
-): Promise<void> => {
+export const updateConfig = async (name: string, parameters: Record<string, unknown>): Promise<void> => {
   try {
     const response = await net.post<RcloneApiResponse>({
       url: '/config/update',
@@ -276,9 +267,7 @@ export const getConfigProviders = async (): Promise<{
   [key: string]: unknown;
 }> => {
   try {
-    const response = await net.post<
-      RcloneApiResponse<{ [key: string]: unknown }>
-    >({
+    const response = await net.post<RcloneApiResponse<{ [key: string]: unknown }>>({
       url: '/config/providers',
       data: {},
     });
@@ -305,9 +294,7 @@ export interface ConnectionTestResult {
 /**
  * 测试配置连接
  */
-export const testConfig = async (
-  name: string,
-): Promise<ConnectionTestResult> => {
+export const testConfig = async (name: string): Promise<ConnectionTestResult> => {
   try {
     const response = await net.post<{
       total?: number;

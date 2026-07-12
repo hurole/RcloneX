@@ -1,11 +1,11 @@
 import * as Sentry from '@sentry/react';
+import { ThemeProvider } from 'next-themes';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import ErrorFallback from './components/ErrorFallback';
-import App from './pages/App';
 import './styles/globals.css';
 import './locales/i18n';
-import { ThemeProvider } from 'next-themes';
+import App from './pages/App';
 
 Sentry.init({
   dsn: 'http://e11483402ab8482db17771a7b07cc6bb@192.168.1.10:8000/1',

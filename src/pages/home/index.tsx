@@ -1,11 +1,11 @@
-import { Header } from '@/components/Header';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { net } from '@/shared/utils/net';
 import { Loader2 } from 'lucide-react';
 import { type FC, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { Header } from '@/components/Header';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { net } from '@/shared/utils/net';
 import { AppSidebar } from './AppSidebar';
 
 const Home: FC = () => {
@@ -53,15 +53,13 @@ const Home: FC = () => {
 
   if (checking) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">
+      <div className="bg-background flex h-screen w-screen flex-col items-center justify-center gap-4">
         {/* 精致的毛玻璃发光 Loading 界面 */}
         <div className="relative flex items-center justify-center">
-          <div className="absolute w-16 h-16 bg-primary/10 rounded-full blur-xl animate-pulse" />
-          <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" />
+          <div className="bg-primary/10 absolute h-16 w-16 animate-pulse rounded-full blur-xl" />
+          <Loader2 className="text-primary relative z-10 h-10 w-10 animate-spin" />
         </div>
-        <p className="text-sm font-semibold text-muted-foreground animate-pulse">
-          {t('login.connecting')}
-        </p>
+        <p className="text-muted-foreground animate-pulse text-sm font-semibold">{t('login.connecting')}</p>
       </div>
     );
   }

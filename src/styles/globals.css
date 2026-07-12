@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -125,18 +125,18 @@
   a,
   button,
   select,
-  [role="button"],
-  [role="menuitem"],
-  [role="tab"],
-  [role="combobox"],
-  [role="checkbox"],
-  [role="switch"],
-  [role="radio"],
-  [role="option"],
-  [data-sidebar="menu-button"],
+  [role='button'],
+  [role='menuitem'],
+  [role='tab'],
+  [role='combobox'],
+  [role='checkbox'],
+  [role='switch'],
+  [role='radio'],
+  [role='option'],
+  [data-sidebar='menu-button'],
   .cursor-pointer,
-  input[type="button"],
-  input[type="submit"] {
+  input[type='button'],
+  input[type='submit'] {
     cursor: pointer !important;
   }
 
@@ -145,7 +145,7 @@
   [disabled],
   [data-disabled],
   .pointer-events-none,
-  [aria-disabled="true"],
+  [aria-disabled='true'],
   .cursor-not-allowed {
     cursor: not-allowed !important;
   }
@@ -176,14 +176,12 @@
 
 /* Logo 调色滤镜，强制契合 Mint & Slate 主题色 */
 .theme-logo-filter {
-  filter: brightness(0) saturate(100%) invert(35.11%) sepia(15.63%)
-    saturate(1187.50%) hue-rotate(110.36deg) brightness(130.45%)
-    contrast(166.08%) !important;
+  filter: brightness(0) saturate(100%) invert(35.11%) sepia(15.63%) saturate(1187.5%) hue-rotate(110.36deg)
+    brightness(130.45%) contrast(166.08%) !important;
   transition: filter 0.3s ease;
 }
 
 .dark .theme-logo-filter {
-  filter: brightness(0) saturate(100%) invert(28.06%) sepia(25.29%)
-    saturate(1039.82%) hue-rotate(108.90deg) brightness(188.69%)
-    contrast(118.21%) !important;
+  filter: brightness(0) saturate(100%) invert(28.06%) sepia(25.29%) saturate(1039.82%) hue-rotate(108.9deg)
+    brightness(188.69%) contrast(118.21%) !important;
 }

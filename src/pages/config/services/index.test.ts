@@ -1,14 +1,7 @@
-import { net } from '@/shared/utils/net';
 import axios from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  createConfig,
-  deleteConfig,
-  getAllConfigs,
-  getConfigDetails,
-  testConfig,
-  updateConfig,
-} from './index';
+import { net } from '@/shared/utils/net';
+import { createConfig, deleteConfig, getAllConfigs, getConfigDetails, testConfig, updateConfig } from './index';
 
 // Mock net
 vi.mock('@/shared/utils/net', () => {

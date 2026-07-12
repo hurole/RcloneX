@@ -56,17 +56,17 @@ graph TD
 
 ## 🛠️ 技术栈
 
-| 模块 | 技术选择 | 描述 |
-| :--- | :--- | :--- |
-| **核心框架** | React 19 | 全新架构，极致性能 |
-| **编程语言** | TypeScript 5.8 | strict 模式保证类型安全 |
-| **构建工具** | Rsbuild v2 | 基于 Rspack，极速冷启动和热更新 |
-| **样式系统** | Tailwind CSS v4 | 使用 CSS Variables 驱动主题 |
-| **UI 组件库**| shadcn/ui | new-york 风格组件，高度自定义 |
-| **网络请求** | Axios | 封装为 `NetworkClient` 单例进行认证和响应拦截 |
-| **表单验证** | react-hook-form + Zod | 类型安全的动态配置表单生成 |
-| **状态/主题**| next-themes + lucide-react | 极简暗黑/明亮主题切换，现代化图标库 |
-| **国际化**   | i18next | 浏览器语言自动检测与中英文本地化 |
+| 模块          | 技术选择                   | 描述                                          |
+| :------------ | :------------------------- | :-------------------------------------------- |
+| **核心框架**  | React 19                   | 全新架构，极致性能                            |
+| **编程语言**  | TypeScript 5.8             | strict 模式保证类型安全                       |
+| **构建工具**  | Rsbuild v2                 | 基于 Rspack，极速冷启动和热更新               |
+| **样式系统**  | Tailwind CSS v4            | 使用 CSS Variables 驱动主题                   |
+| **UI 组件库** | shadcn/ui                  | new-york 风格组件，高度自定义                 |
+| **网络请求**  | Axios                      | 封装为 `NetworkClient` 单例进行认证和响应拦截 |
+| **表单验证**  | react-hook-form + Zod      | 类型安全的动态配置表单生成                    |
+| **状态/主题** | next-themes + lucide-react | 极简暗黑/明亮主题切换，现代化图标库           |
+| **国际化**    | i18next                    | 浏览器语言自动检测与中英文本地化              |
 
 ---
 
@@ -103,7 +103,7 @@ src/
 
 ### 1. 克隆并安装依赖
 
-首先确保你的系统安装了 **Node.js** 和 **pnpm**。
+首先确保你的系统安装了 **Node.js** 和 **nub**。
 
 ```bash
 # 克隆仓库并进入项目目录
@@ -111,7 +111,7 @@ git clone https://github.com/hurole/RcloneX.git
 cd RcloneX
 
 # 安装依赖
-pnpm install
+nub install
 ```
 
 ### 2. 启动 Rclone Remote Control (RC) 守护进程
@@ -119,7 +119,7 @@ pnpm install
 RcloneX 是一个纯前端项目，需要连接到一个运行中的 Rclone RC 服务。你可以通过以下命令在本地启动测试服务（需提前安装 Rclone）：
 
 ```bash
-pnpm start:rclone
+nub run start:rclone
 ```
 
 > **该命令的实际执行内容：**
@@ -130,10 +130,11 @@ pnpm start:rclone
 在另一个终端中，运行以下命令启动 RcloneX 前端：
 
 ```bash
-pnpm dev
+nub run dev
 ```
 
 浏览器会自动打开并跳转至 `http://localhost:3000`。在登录页面输入对应的连接参数即可进入系统：
+
 - **RC Address**: `http://localhost:5572`
 - **Username**: `dev`
 - **Password**: `1234`
@@ -144,16 +145,16 @@ pnpm dev
 
 ### 常用命令列表
 
-| 命令 | 描述 |
-| :--- | :--- |
-| `pnpm dev` | 启动开发服务器（含热更新） |
-| `pnpm build` | 编译打包生产环境产物 |
-| `pnpm preview` | 在本地预览生产环境构建产物 |
-| `pnpm format` | 运行 Biome 格式化代码 |
-| `pnpm check` | 运行 Biome 检查并自动修复 Lint 问题 |
-| `pnpm type-check` | 运行 TypeScript 语法与类型安全检查 |
-| `pnpm test` | 运行 Vitest 进行单元与集成测试（单次运行） |
-| `pnpm sentry` | 上传 source map 至 Sentry 进行错误监控 |
+| 命令              | 描述                                       |
+| :---------------- | :----------------------------------------- |
+| `nub run dev`     | 启动开发服务器（含热更新）                 |
+| `nub run build`   | 编译打包生产环境产物                       |
+| `nub run preview` | 在本地预览生产环境构建产物                 |
+| `nub run check`   | 运行 TypeScript 语法与类型安全检查         |
+| `nub run fmt`     | 运行 oxfmt 自动格式化项目代码              |
+| `nub run lint`    | 运行 oxlint 进行代码 Lint 静态检查         |
+| `nub run test`    | 运行 Vitest 进行单元与集成测试（单次运行） |
+| `nub run sentry`  | 上传 source map 至 Sentry 进行错误监控     |
 
 ### 编码规范与工作流
 
@@ -161,9 +162,9 @@ pnpm dev
 
 1. **修改代码后必须运行格式化与语法检查**：
    ```bash
-   pnpm format
-   pnpm check
-   pnpm type-check
+   nub run lint
+   nub run fmt
+   nub run check
    ```
 2. **组件定义**：
    - 统一使用函数式组件 + `FC` 类型或 `export default function`。
