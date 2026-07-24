@@ -7,7 +7,12 @@
 <h1 align="center">RcloneX</h1>
 
 <p align="center">
-  <strong>✨ 基于 React 19 + TypeScript 7.0.2 + Rsbuild v2 + Tailwind CSS v4 构建的现代化、高性能 Rclone Web UI 管理面板 ✨</strong>
+  <strong>✨ A modern, high-performance Rclone Web UI Management Panel built with React 19, TypeScript 7.0.2, Rsbuild v2, and Tailwind CSS v4 ✨</strong>
+</p>
+
+<p align="center">
+  <strong>English</strong> •
+  <a href="README_ZH.md">简体中文</a>
 </p>
 
 <p align="center">
@@ -29,99 +34,103 @@
 </p>
 
 <p align="center">
-  <a href="#-核心特性">核心特性</a> •
-  <a href="#-技术栈亮点">技术栈亮点</a> •
-  <a href="#-快速上手">快速上手</a> •
-  <a href="#-项目结构">项目结构</a> •
-  <a href="#-开发与维护">开发与维护</a> •
-  <a href="#-参与贡献">参与贡献</a>
+  <a href="#-key-features">Key Features</a> •
+  <a href="#-tech-stack-highlights">Tech Stack</a> •
+  <a href="#-getting-started">Getting Started</a> •
+  <a href="#-project-structure">Project Structure</a> •
+  <a href="#-development--maintenance">Development</a> •
+  <a href="#-contributing">Contributing</a>
 </p>
 
 ---
 
-## 📖 项目简介
+> 🚧 **Note:** This project is currently **under active development**. Features and UI are evolving rapidly. Feedback and contributions are warmly welcomed!
 
-**RcloneX** 是一个功能强大且美观的 Rclone 远程控制（Remote Control, RC）API 现代前端客户端。它允许用户通过直观、顺滑的 Web 界面直接管理、配置、浏览和操作连接到 Rclone 的各种远程存储服务。
+## 📖 Introduction
 
-### 📡 架构示意图
+**RcloneX** is a powerful and aesthetically crafted web client for the Rclone Remote Control (RC) API. It empowers users to manage, configure, browse, and operate various remote storage services connected to Rclone through an intuitive, fluid, and responsive web user interface.
+
+### 📡 Architecture Overview
 
 ```mermaid
 graph TD
-    User([用户]) <-->|图形交互| UI[RcloneX Web 界面]
-    UI <-->|HTTP / Axios JSON-RPC| RClone[Rclone 后端守护进程 rcd]
-    RClone <-->|Rclone 协议| Remote1[OneDrive / Google Drive]
-    RClone <-->|Rclone 协议| Remote2[SFTP / FTP / WebDAV]
-    RClone <-->|Rclone 协议| Remote3[Amazon S3 / 各种云盘 / 本地存储]
+    User([User]) <-->|GUI Interaction| UI[RcloneX Web Interface]
+    UI <-->|HTTP / Axios JSON-RPC| RClone[Rclone RC Daemon Daemon - rcd]
+    RClone <-->|Rclone Backend Protocol| Remote1[OneDrive / Google Drive]
+    RClone <-->|Rclone Backend Protocol| Remote2[SFTP / FTP / WebDAV]
+    RClone <-->|Rclone Backend Protocol| Remote3[Amazon S3 / RustFS / MinIO / Custom Remotes]
 ```
 
 ---
 
-## ✨ 核心特性
+## ✨ Key Features
 
-- 🔒 **安全极简登录**：支持配置 Rclone RC 服务的连接地址、用户名和密码，一键认证并快速建立稳定通信。
-- 📊 **实时仪表盘**：直观的图表与状态卡片，实时监控当前传输速率、传输进度、已运行任务、系统资源占用等状态。
-- ⚙️ **配置管理器 (CRUD)**：可视化创建、修改、删除及查看 Rclone 存储源配置，摆脱繁琐的终端命令行交互。
-- 📂 **多功能文件浏览器**：
-  - 浏览各个 Remote 盘符的动态目录树。
-  - 文件/文件夹的秒级上传、下载、新建、删除。
-  - 支持跨远程存储服务之间直接进行文件复制与移动。
-- ⏳ **任务与传输队列**：实时监控后台正在进行的同步、复制、移动等长耗时传输任务，进度掌控一目了然。
-- 🔌 **挂载点管理器**：可视化管理和控制 Rclone 的本地挂载点（Mounts），轻松实现云盘本地化。
-- 📝 **实时系统日志**：无缝对接并实时流式查看 Rclone 运行日志，便于开发调试与故障排查。
-- 🌍 **完整国际化 (i18n)**：完美支持中英文（`zh-CN` / `en-US`）双语切换。
-
----
-
-## ⚡ 技术栈亮点
-
-RcloneX 深度拥抱现代前端最速生态圈，具备极佳的加载性能与极致的代码规范：
-
-- 🚀 **构建极速化 (Rsbuild v2)**：基于 Rspack 驱动的 Rsbuild 构建工具，冷启动与 HMR（热更新）耗时仅在微秒级别，开发体验极佳。
-- 💎 **全新规范 (TypeScript 7 + React 19)**：完全启用 TS Strict 编译标准，原子组件彻底去除 `forwardRef` 包装，代码清爽优雅。
-- 🏎️ **代码规范革新 (Oxc Toolchain)**：使用高性能 Oxc 工具链彻底替换 Biome：
-  - **`oxlint`**：进行超高速的代码静态语法分析（比传统 ESLint 快百倍）。
-  - **`oxfmt`**：配合 `@fka/oxfmt-config` 共享配置进行零摩擦极速代码格式化排版。
-- 🎨 **极致美学 (Tailwind v4 + shadcn/ui)**：全站 UI 基于最新的 shadcn/ui v2 新版规范，底层完美自适应折叠布局；使用 Tailwind CSS v4 CSS 变量驱动的 `@theme` 主题，带来丝滑顺滑的暗色/亮色切换体验。
+- 🔒 **Secure Authentication**: Connect seamlessly to your Rclone RC daemon using custom server URLs and credentials.
+- 📊 **Real-time Dashboard**: Monitor network bandwidth speed, active transfers, system status, and storage quota summaries at a glance.
+- ☁️ **Smart Remote Hub**: Easily manage remote storage configurations (CRUD). Direct one-click access to Explorer, local virtual disk mounting, and connectivity testing probes.
+- 📂 **Feature-rich File Explorer**:
+  - Browse dynamic directory trees across any remote.
+  - Upload, download, create, and delete files with high responsiveness.
+  - Seamlessly copy or move files across different cloud remotes.
+- ⏳ **Task & Transfer Management**: Track ongoing background sync/copy/move operations with progress indicators.
+- ⏱️ **Scheduled Tasks**: Configure periodic background sync and backup automation rules.
+- 🔗 **Mount Points Manager**: Visually manage and control local Rclone mounts to turn cloud drives into local virtual disks.
+- 📝 **Live System Logs**: Stream real-time Rclone logs for effortless debugging and monitoring.
+- 🌍 **Full Internationalization (i18n)**: Out-of-the-box support for switching between English (`en-US`) and Chinese (`zh-CN`).
 
 ---
 
-## 🚀 快速上手
+## ⚡ Tech Stack Highlights
 
-### 1. 准备工作
+RcloneX leverages the latest cutting-edge web ecosystem for maximum performance and developer experience:
 
-首先确保你的系统安装了 **Node.js (v24.x)** 和 modern 一站式工具链 **nub**。
+- 🚀 **Blazing Fast Builds (Rsbuild v2)**: Powered by Rspack, providing sub-millisecond HMR and instant cold starts.
+- 💎 **Modern Standards (React 19 + TypeScript 7)**: Strict type safety without unnecessary boilerplate wrappers.
+- 🏎️ **Next-Gen Linting & Formatting (Oxc Toolchain)**:
+  - **`oxlint`**: Lightning-fast static code analysis.
+  - **`oxfmt`**: Instant code formatting paired with `@fka/oxfmt-config`.
+- 🎨 **Premium UI Aesthetics (Tailwind CSS v4 + shadcn/ui)**: Clean design tokens using Tailwind CSS v4 variables with seamless dark/light mode switching.
 
-### 2. 克隆项目与安装
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+
+Ensure you have **Node.js (v24.x)** and the **nub** modern package manager installed.
+
+### 2. Clone & Install
 
 ```bash
-# 克隆仓库
+# Clone the repository
 git clone https://github.com/hurole/RcloneX.git
 cd RcloneX
 
-# 锁定项目 Node.js 版本并完成依赖安装
-nub node pin 24
+# Install dependencies
 nub install
 ```
 
-### 3. 启动本地 Rclone 模拟后端 (需提前安装 Rclone)
+### 3. Start Local Rclone Backend (Mock / Dev Mode)
+
+Make sure Rclone is installed on your system, then start the RC daemon:
 
 ```bash
-# 启动本地 Rclone 并开启 RC 协议支持
+# Launch Rclone RC daemon
 nub run start:rclone
 ```
 
-> 💡 **提示：**
-> 该命令会在本地执行：`rclone rcd --rc-addr :5572 --rc-user dev --rc-pass 1234 --rc-allow-origin http://localhost:3000`
+> 💡 **Info:**
+> This runs: `rclone rcd --rc-addr :5572 --rc-user dev --rc-pass 1234 --rc-allow-origin http://localhost:3000`
 
-### 4. 开启开发面板
+### 4. Launch Development Server
 
-在另一个终端中，运行以下命令启动 RcloneX 前端：
+In a new terminal window, start RcloneX:
 
 ```bash
 nub run dev
 ```
 
-浏览器会自动打开并跳转至 `http://localhost:3000`。在登录页面输入以下测试凭证即可进入系统：
+Open `http://localhost:3000` in your browser. Use the following default test credentials to log in:
 
 - **RC Address**: `http://localhost:5572`
 - **Username**: `dev`
@@ -129,76 +138,66 @@ nub run dev
 
 ---
 
-## 📂 项目结构
+## 📂 Project Structure
 
 ```
 src/
-├── assets/              # 静态资源（包含 appIcon.png）
-├── components/          # 共享 UI 组件
-│   ├── ui/              # 最新版 shadcn/ui 基础组件
-│   ├── Header.tsx       # 全局头部组件 (响应式极简设计)
-│   └── ErrorFallback.tsx # 错误边界 Fallback 视图
-├── hooks/               # 自定义 React Hooks
-├── lib/utils/           # 样式合并与基础工具函数
-├── locales/             # 国际化翻译文件包 (en-US / zh-CN)
-├── pages/               # 各业务路由视图组件
-│   ├── App.tsx          # 路由配置入口
-│   ├── home/            # 框架主布局 (Sidebar + Header + Outlet)
-│   ├── login/           # 登录鉴权页面
-│   ├── dashboard/       # 仪表盘状态监控
-│   ├── config/          # 云存储配置中心
-│   ├── explorer/        # 文件浏览器
-│   ├── tasks/           # 后台任务列表
-│   ├── mounts/          # 挂载管理器
-│   └── logs/            # 系统实时日志
-├── shared/utils/        # 共享工具单例（网络请求单例、本地存储读写等）
-├── styles/globals.css   # 全局样式与 Tailwind v4 主题
-└── index.tsx            # 应用挂载入口
+├── assets/              # Static assets (including appIcon.png)
+├── components/          # Shared UI components
+│   ├── ui/              # shadcn/ui components
+│   ├── Header.tsx       # Global application header
+│   └── ErrorFallback.tsx # Error boundary view
+├── hooks/               # Custom React hooks
+├── lib/utils/           # Styling & utility functions
+├── locales/             # i18n translation files (en-US / zh-CN)
+├── pages/               # Application routes & pages
+│   ├── App.tsx          # Main application router
+│   ├── home/            # Main layout wrapper (Sidebar + Header + Outlet)
+│   ├── login/           # Login & RC authentication
+│   ├── dashboard/       # System metrics & quota dashboard
+│   ├── config/          # Remote storage management (Smart Hub)
+│   ├── explorer/        # File explorer
+│   ├── tasks/           # Active transfer tasks
+│   ├── mounts/          # Local disk mounts manager
+│   ├── schedules/       # Scheduled sync tasks
+│   └── logs/            # Live Rclone logs
+├── shared/utils/        # Shared singleton modules (Network client, Local storage)
+├── styles/globals.css   # Global Tailwind CSS v4 styles
+└── index.tsx            # Application entry point
 ```
 
 ---
 
-## 💻 开发与维护
+## 💻 Development & Maintenance
 
-### 常用命令指南
+### Available Scripts
 
-在对代码进行本地开发或打包提交前，可通过 `nub` 运行以下脚本：
+Run scripts using `nub`:
 
-| 运行指令              | 命令动作描述                                | 备注                                  |
-| :-------------------- | :------------------------------------------ | :------------------------------------ |
-| **`nub run dev`**     | 启动开发服务器（支持 HMR）                  | 默认开启端口 3000 并拉起浏览器        |
-| **`nub run lint`**    | 运行 **`oxlint`** 进行代码静态语法扫描      | 扫描速度极快，确保无低级代码错误      |
-| **`nub run fmt`**     | 运行 **`oxfmt`** 进行全站代码格式化排版     | 采用 `@fka/oxfmt-config` 最佳实践配置 |
-| **`nub run check`**   | 运行 **`tsc`** 进行 TypeScript 类型安全校验 | 检验全站没有任何编译级别类型报错      |
-| **`nub run test`**    | 运行 **`Vitest`** 进行单元与集成测试        | 执行全站断言，验证无任何回归 Bug      |
-| **`nub run build`**   | 执行生产环境编译打包                        | 打包出经过高度优化的静态静态文件      |
-| **`nub run preview`** | 本地预览生产构建打包产物                    | 检验生产打包产物在本地是否运行正常    |
-
-### 🛠️ 规范与工作流约束 (CRITICAL)
-
-当您向本项目贡献代码或进行功能修改时，**必须执行以下步骤确保项目格式与类型无误**：
-
-1.  **运行本地自检链**（修改完代码后，提交前必须全部绿灯通过）：
-    ```bash
-    nub run lint && nub run fmt && nub run check && nub run test
-    ```
-2.  **组件编写**：一律使用 `.tsx` 后缀，组件内禁止使用 `style={{...}}` 内联样式，必须使用 Tailwind 类名。
-3.  **禁止 `any`**：必须开启并遵循 TS Strict 模式，坚决禁止使用 `any`。
-4.  **国际化支持**：直接呈现给用户的静态/动态文本，禁止硬编码，必须使用 `t()` 函数包裹，并在中英文翻译 JSON 中同步添加。
+| Command               | Description                               | Notes                           |
+| :-------------------- | :---------------------------------------- | :------------------------------ |
+| **`nub run dev`**     | Start dev server with HMR                 | Port 3000                       |
+| **`nub run lint`**    | Run **`oxlint`** for fast static analysis | Ensures clean syntax            |
+| **`nub run fmt`**     | Run **`oxfmt`** to format code            | Uses `@fka/oxfmt-config`        |
+| **`nub run check`**   | Run **`tsc`** for TypeScript typechecking | Zero type errors                |
+| **`nub run test`**    | Run **`Vitest`** test suite               | Runs unit and integration tests |
+| **`nub run build`**   | Build production bundle                   | Optimized static bundle         |
+| **`nub run preview`** | Preview production build locally          | Test prod build locally         |
 
 ---
 
-## 🤝 参与贡献
+## 🤝 Contributing
 
-我们非常欢迎并感谢任何形式的贡献！
+Contributions, issues, and feature requests are welcome! Feel free to check out the [issues page](https://github.com/hurole/RcloneX/issues).
 
-- 如果发现了 Bug，请提交 [Issue](https://github.com/hurole/RcloneX/issues)。
-- 如果你想贡献代码，请提交 [Pull Request](https://github.com/hurole/RcloneX/pulls)。
+Before submitting a Pull Request, please ensure all checks pass:
 
-在提交 Pull Request 之前，请务必保证运行 `nub run lint && nub run fmt && nub run check && nub run test` 通过了所有自检校验。
+```bash
+nub run lint && nub run fmt && nub run check && nub run test
+```
 
 ---
 
-## 📄 开源许可证
+## 📄 License
 
-本项目基于 **MIT License** 开源，详情请参阅 `LICENSE` 文件。
+This project is licensed under the **MIT License** - see the `LICENSE` file for details.
