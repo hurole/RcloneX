@@ -6,13 +6,14 @@ import {
   File,
   Folder,
   LayoutGrid,
+  Link2,
   List,
   Loader2,
   Plus,
   RefreshCw,
   Trash2,
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
@@ -30,7 +31,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type RcloneConfig, getAllConfigs } from '@/pages/config/services';
-import { type RcloneFileItem, copyJob, deleteFile, listDirectory, makeDirectory, purgeDirectory } from './services';
+import {
+  type RcloneFileItem,
+  copyJob,
+  deleteFile,
+  getPublicLink,
+  listDirectory,
+  makeDirectory,
+  purgeDirectory,
+} from './services';
 
 export default function Explorer() {
   const { t } = useTranslation();
@@ -57,6 +66,11 @@ export default function Explorer() {
   const [targetPath, setTargetPath] = useState('');
   const [copying, setCopying] = useState(false);
 
+  // Delete Dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteTargetItem, setDeleteTargetItem] = useState<RcloneFileItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   // Initialize selected remote from URL search params
   useEffect(() => {
     const fetchConfigs = async () => {
@@ -64,14 +78,15 @@ export default function Explorer() {
         const data = await getAllConfigs();
         setRemotes(data);
 
-        // If searchParam passes a remote, select it
-        const urlRemote = searchParams.get('search');
+        // If searchParam passes a remote parameter (e.g. ?remote=S3 or ?search=S3), select it
+        const urlRemote = searchParams.get('remote') || searchParams.get('search');
         if (urlRemote && data.some(c => c.name === urlRemote)) {
           setSelectedRemote(urlRemote);
-        } else if (data.length > 0) {
+          setCurrentPath('');
+        } else if (data.length > 0 && !selectedRemote) {
           setSelectedRemote(data[0].name);
         }
-      } catch (err) {
+      } catch {
         toast.error('获取存储源配置失败');
       }
     };
@@ -146,21 +161,29 @@ export default function Explorer() {
     }
   };
 
-  // Delete item
-  const handleDeleteItem = async (item: RcloneFileItem) => {
-    const confirmMsg = item.IsDir ? t('Delete Folder Confirm Msg') : t('Delete File Confirm Msg');
-    if (!window.confirm(confirmMsg)) return;
+  // Open Delete confirmation dialog
+  const handleOpenDeleteDialog = (item: RcloneFileItem) => {
+    setDeleteTargetItem(item);
+    setIsDeleteDialogOpen(true);
+  };
 
+  // Confirm Delete execution
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetItem) return;
+    setDeleting(true);
     try {
-      if (item.IsDir) {
-        await purgeDirectory(selectedRemote, item.Path);
+      if (deleteTargetItem.IsDir) {
+        await purgeDirectory(selectedRemote, deleteTargetItem.Path);
       } else {
-        await deleteFile(selectedRemote, item.Path);
+        await deleteFile(selectedRemote, deleteTargetItem.Path);
       }
       toast.success('删除成功');
+      setIsDeleteDialogOpen(false);
       handleRefresh();
-    } catch (err) {
+    } catch {
       toast.error('删除失败');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -186,10 +209,25 @@ export default function Explorer() {
 
       // Dispatch configurations updated event to notify sidebar about potential stats/active counters
       window.dispatchEvent(new Event('rclone-configs-updated'));
-    } catch (err) {
+    } catch {
       toast.error('启动复制任务失败，请检查路径');
     } finally {
       setCopying(false);
+    }
+  };
+
+  // Public link share
+  const handleGetPublicLink = async (item: RcloneFileItem) => {
+    try {
+      const url = await getPublicLink(selectedRemote, item.Path);
+      if (url) {
+        await navigator.clipboard.writeText(url);
+        toast.success(`${t('publicLinkSuccess')}: ${url}`);
+      } else {
+        toast.info('未能获取到公开外链');
+      }
+    } catch {
+      toast.error('生成公开链接失败，当前存储 Backend 可能不支持公开外链');
     }
   };
 
@@ -349,7 +387,8 @@ export default function Explorer() {
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-border/40 bg-muted/20 text-muted-foreground border-b font-semibold">
-                    <th className="p-3.5 pl-6">{t('Configuration Name')}</th>
+                    <th className="p-3.5 pl-6">{t('Name')}</th>
+
                     <th className="p-3.5">{t('Size')}</th>
                     <th className="p-3.5">{t('Type')}</th>
                     <th className="p-3.5">{t('Last Modified')}</th>
@@ -387,6 +426,14 @@ export default function Explorer() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            title={t('getPublicLink')}
+                            onClick={() => handleGetPublicLink(item)}
+                            className="text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 w-8 cursor-pointer rounded-lg">
+                            <Link2 className="size-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             title="备份同步至其他存储"
                             onClick={() => handleOpenCopyDialog(item)}
                             className="text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 w-8 cursor-pointer rounded-lg">
@@ -396,7 +443,7 @@ export default function Explorer() {
                             variant="ghost"
                             size="icon"
                             title={t('Delete')}
-                            onClick={() => handleDeleteItem(item)}
+                            onClick={() => handleOpenDeleteDialog(item)}
                             className="text-muted-foreground h-8 w-8 cursor-pointer rounded-lg hover:bg-red-50/10 hover:text-red-600">
                             <Trash2 className="size-3.5" />
                           </Button>
@@ -418,6 +465,15 @@ export default function Explorer() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      title={t('getPublicLink')}
+                      onClick={() => handleGetPublicLink(item)}
+                      className="text-muted-foreground hover:text-primary h-7 w-7 cursor-pointer rounded-md">
+                      <Link2 className="size-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="备份同步至其他存储"
                       onClick={() => handleOpenCopyDialog(item)}
                       className="text-muted-foreground hover:text-primary h-7 w-7 cursor-pointer rounded-md">
                       <Copy className="size-3" />
@@ -425,7 +481,8 @@ export default function Explorer() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDeleteItem(item)}
+                      title={t('Delete')}
+                      onClick={() => handleOpenDeleteDialog(item)}
                       className="text-muted-foreground h-7 w-7 cursor-pointer rounded-md hover:text-red-600">
                       <Trash2 className="size-3" />
                     </Button>
@@ -572,6 +629,7 @@ export default function Explorer() {
               className="cursor-pointer">
               {t('Cancel')}
             </Button>
+
             <Button
               type="button"
               onClick={handleConfirmCopy}
@@ -584,6 +642,85 @@ export default function Explorer() {
                 </>
               ) : (
                 t('Run Task')
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent
+          onOpenAutoFocus={e => e.preventDefault()}
+          className="border-border/60 bg-background/95 rounded-2xl p-6 shadow-2xl backdrop-blur-xl transition-all sm:max-w-[440px]">
+          <DialogHeader className="space-y-3 text-left">
+            <div className="flex items-center gap-3">
+              <div className="bg-destructive/10 text-destructive border-destructive/20 flex size-10 shrink-0 items-center justify-center rounded-2xl border shadow-inner">
+                <AlertTriangle className="size-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-foreground text-lg font-extrabold tracking-tight">
+                  {t('Delete Confirm Title')}
+                </DialogTitle>
+                <DialogDescription className="text-muted-foreground mt-0.5 text-xs font-medium">
+                  {deleteTargetItem?.IsDir ? t('Delete Folder Confirm Msg') : t('Delete File Confirm Msg')}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {deleteTargetItem && (
+            <div className="space-y-3 py-2">
+              {/* Target File / Folder Detail Card */}
+              <div className="border-border/50 bg-muted/30 hover:border-destructive/30 flex items-center gap-3.5 rounded-xl border p-3.5 transition-colors">
+                <div className="bg-background border-border/40 flex size-10 shrink-0 items-center justify-center rounded-xl border shadow-sm">
+                  {deleteTargetItem.IsDir ? (
+                    <Folder className="fill-primary/10 text-primary size-5" />
+                  ) : (
+                    <File className="text-muted-foreground size-5" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-foreground truncate text-xs leading-none font-bold">{deleteTargetItem.Name}</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground/70 text-[10px] font-medium">路径:</span>
+                    <code className="bg-background/80 border-border/40 text-muted-foreground max-w-[240px] truncate rounded border px-1.5 py-0.5 font-mono text-[10px]">
+                      {deleteTargetItem.Path || '/'}
+                    </code>
+                  </div>
+                </div>
+              </div>
+
+              {/* Warning Alert Note */}
+              <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                <span className="text-amber-500">⚠️</span>
+                <span>{t('This action cannot be undone.')}</span>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="mt-2 flex items-center justify-end gap-2.5 sm:gap-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={deleting}
+              className="border-border/60 hover:bg-muted h-9 min-w-[76px] cursor-pointer rounded-lg px-4 text-xs font-semibold shadow-none outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 active:scale-[0.98]">
+              {t('Cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+              className="bg-destructive hover:bg-destructive/90 shadow-destructive/20 h-9 min-w-[76px] cursor-pointer rounded-lg px-4 text-xs font-bold text-white shadow-sm outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 active:scale-[0.98]">
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  {t('config.deleting')}
+                </>
+              ) : (
+                t('Delete')
               )}
             </Button>
           </DialogFooter>

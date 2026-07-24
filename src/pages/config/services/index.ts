@@ -292,38 +292,49 @@ export interface ConnectionTestResult {
 }
 
 /**
- * 测试配置连接
+ * 测试配置连接 (使用 operations/list 试探通用连通性，防止 S3 报 operations/about 错误)
  */
 export const testConfig = async (name: string): Promise<ConnectionTestResult> => {
   try {
-    const response = await net.post<{
-      total?: number;
-      used?: number;
-      free?: number;
-      error?: string;
-    }>({
-      url: '/operations/about',
+    const formattedFs = name.endsWith(':') ? name : `${name}:`;
+
+    // 1. 使用 operations/fsinfo 或 operations/list 探针通用测试连通性
+    const listRes = await net.post<{ list?: unknown[]; error?: string }>({
+      url: '/operations/list',
       data: {
-        fs: `${name}:`,
+        fs: formattedFs,
+        remote: '',
+        opt: {
+          recurse: false,
+        },
       },
     });
 
-    if (response?.error) {
+    if (listRes?.error) {
       return {
         success: false,
-        error: response.error,
+        error: listRes.error,
       };
+    }
+
+    // 2. 探针连通成功！尝试性静默获取空间配额（如 Google Drive / OneDrive）
+    let aboutInfo: RcloneAboutInfo | null = null;
+    try {
+      // 只有支持 about 的类型才获取容量
+      aboutInfo = await getRemoteAbout(name);
+    } catch {
+      // 忽略容量获取错误
     }
 
     return {
       success: true,
-      total: response?.total,
-      used: response?.used,
-      free: response?.free,
+      total: aboutInfo?.total,
+      used: aboutInfo?.used,
+      free: aboutInfo?.free,
     };
   } catch (error) {
     console.error('测试配置连接失败:', error);
-    let errorMsg = '未知错误';
+    let errorMsg = '连接失败，请检查网络或认证参数';
     if (axios.isAxiosError(error) && error.response?.data) {
       const responseData = error.response.data as { error?: string };
       if (responseData.error) {
@@ -337,4 +348,64 @@ export const testConfig = async (name: string): Promise<ConnectionTestResult> =>
       error: errorMsg,
     };
   }
+};
+
+export interface RcloneAboutInfo {
+  total?: number;
+  used?: number;
+  free?: number;
+  trashed?: number;
+  other?: number;
+}
+
+/**
+ * 获取指定远程存储 (Remote) 的磁盘空间配额与使用详情
+ */
+export const getRemoteAbout = async (
+  remoteName: string,
+  configDetail?: RcloneConfig,
+): Promise<RcloneAboutInfo | null> => {
+  try {
+    const type = configDetail?.type?.toLowerCase();
+
+    // Rclone 官方机制：S3 协议 (无论是 Root 还是 Bucket) 及 HTTP 等类型全量不支持 operations/about
+    // 提前跳过，彻底防止服务端 rclone rc 控制台产生 ERROR 刷屏
+    if (type === 's3' || type === 'http') {
+      return null;
+    }
+
+    const targetFs = remoteName.endsWith(':') ? remoteName : `${remoteName}:`;
+
+    const response = await net.post<RcloneAboutInfo>({
+      url: '/operations/about',
+      data: {
+        fs: targetFs,
+      },
+    });
+    return response || null;
+  } catch (error) {
+    console.warn(`获取远程存储 (${remoteName}) 空间配额失败:`, error);
+    return null;
+  }
+};
+
+/**
+ * 批量并行获取所有远程存储的空间配额与使用数据
+ */
+export const getAllRemotesAbout = async (
+  configsOrNames: (RcloneConfig | string)[],
+): Promise<Record<string, RcloneAboutInfo>> => {
+  const result: Record<string, RcloneAboutInfo> = {};
+  await Promise.all(
+    configsOrNames.map(async item => {
+      const remoteName = typeof item === 'string' ? item : item.name;
+      const configDetail = typeof item === 'string' ? undefined : item;
+
+      const about = await getRemoteAbout(remoteName, configDetail);
+      if (about) {
+        result[remoteName] = about;
+      }
+    }),
+  );
+  return result;
 };

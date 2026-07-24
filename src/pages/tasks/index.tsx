@@ -28,7 +28,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type RcloneConfig, getAllConfigs } from '@/pages/config/services';
-import { type RcloneCoreStats, type RcloneJobItem, getCoreStats, getJobList, startTransfer, stopJob } from './services';
+import {
+  type RcloneCoreStats,
+  type RcloneJobItem,
+  createAdvancedTask,
+  getCoreStats,
+  getJobList,
+  stopJob,
+} from './services';
 
 export default function Tasks() {
   const { t } = useTranslation();
@@ -41,13 +48,14 @@ export default function Tasks() {
   // Remotes for task creator
   const [remotes, setRemotes] = useState<RcloneConfig[]>([]);
 
-  // Dialog state
+  // Dialog state for standard new task
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
-  const [taskType, setTaskType] = useState<'copy' | 'sync' | 'move'>('copy');
+  const [taskType, setTaskType] = useState<'copy' | 'sync' | 'move' | 'bisync' | 'check' | 'cleanup'>('copy');
   const [srcRemote, setSrcRemote] = useState('');
   const [srcPath, setSrcPath] = useState('');
   const [dstRemote, setDstRemote] = useState('');
   const [dstPath, setDstPath] = useState('');
+  const [dryRun, setDryRun] = useState(false);
   const [starting, setStarting] = useState(false);
 
   // Load metrics & jobs list
@@ -97,22 +105,33 @@ export default function Tasks() {
 
   // Run new transfer task
   const handleStartTask = async () => {
-    if (!srcRemote || !dstRemote) {
-      toast.error('请选择源存储和目标存储');
+    if (taskType !== 'cleanup' && (!srcRemote || (!dstRemote && taskType !== 'check'))) {
+      toast.error('请正确选择源存储与目标存储');
       return;
     }
     setStarting(true);
+
     try {
-      const res = await startTransfer(taskType, srcRemote, srcPath, dstRemote, dstPath);
-      toast.success(`传输任务已成功在后台启动 (ID: ${res.jobid})`);
+      const formattedSrcFs = srcRemote ? (srcRemote.endsWith(':') ? srcRemote : `${srcRemote}:`) + srcPath : undefined;
+      const formattedDstFs = dstRemote ? (dstRemote.endsWith(':') ? dstRemote : `${dstRemote}:`) + dstPath : undefined;
+
+      const res = await createAdvancedTask({
+        type: taskType,
+        srcFs: formattedSrcFs,
+        dstFs: formattedDstFs,
+        dryRun,
+      });
+
+      toast.success(`传输任务已成功在后台启动 ${res.jobid ? `(ID: ${res.jobid})` : ''}`);
       setIsNewTaskOpen(false);
 
       // Clear wizard
       setSrcPath('');
       setDstPath('');
+      setDryRun(false);
 
       loadData(true);
-    } catch (err) {
+    } catch {
       toast.error('任务启动失败，请检查远程配置和路径参数');
     } finally {
       setStarting(false);
@@ -166,6 +185,7 @@ export default function Tasks() {
       </div>
 
       {/* Stats Cards Row */}
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="border-border/50 bg-muted/20 border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -356,6 +376,7 @@ export default function Tasks() {
       </Card>
 
       {/* New Task Creator Wizard Dialog */}
+
       <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
@@ -371,7 +392,7 @@ export default function Tasks() {
             <div className="grid gap-2">
               <Label className="text-sm font-bold">{t('Task Type')}</Label>
               <div className="grid grid-cols-3 gap-2">
-                {(['copy', 'sync', 'move'] as const).map(type => (
+                {(['copy', 'sync', 'move', 'bisync', 'check', 'cleanup'] as const).map(type => (
                   <button
                     key={type}
                     type="button"
@@ -381,10 +402,34 @@ export default function Tasks() {
                         ? 'border-primary bg-primary/10 text-primary shadow-primary/5 shadow-sm'
                         : 'border-border/60 hover:bg-muted/30 text-muted-foreground'
                     }`}>
-                    {type === 'copy' ? t('Task Copy') : type === 'sync' ? t('Task Sync') : t('Task Move')}
+                    {type === 'copy'
+                      ? t('Task Copy')
+                      : type === 'sync'
+                        ? t('Task Sync')
+                        : type === 'move'
+                          ? t('Task Move')
+                          : type === 'bisync'
+                            ? t('taskBisync')
+                            : type === 'check'
+                              ? t('taskCheck')
+                              : t('taskCleanup')}
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Dry run option */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="dry-run"
+                checked={dryRun}
+                onChange={e => setDryRun(e.target.checked)}
+                className="accent-primary size-4 cursor-pointer rounded"
+              />
+              <Label htmlFor="dry-run" className="cursor-pointer text-xs font-semibold">
+                {t('dryRun')}
+              </Label>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

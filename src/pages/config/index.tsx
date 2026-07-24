@@ -1,8 +1,10 @@
 import {
   Activity,
+  CalendarClock,
   Cloud,
   Database,
   Edit,
+  FolderOpen,
   Globe,
   HardDrive,
   Loader2,
@@ -16,7 +18,7 @@ import {
 } from 'lucide-react';
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,8 +39,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-// 导入服务
-import { type RcloneConfig, createConfig, deleteConfig, getAllConfigs, testConfig, updateConfig } from './services';
+import {
+  type RcloneAboutInfo,
+  type RcloneConfig,
+  createConfig,
+  deleteConfig,
+  getAllConfigs,
+  getAllRemotesAbout,
+  testConfig,
+  updateConfig,
+} from './services';
 
 // 配置类型定义
 interface ConfigFormData {
@@ -191,15 +201,19 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
   s3: [
     {
       key: 'provider',
-      label: 'S3 Provider',
+      label: 'S3 Provider (供应商)',
       type: 'select',
       required: true,
       defaultValue: 'AWS',
       options: [
         { value: 'AWS', label: 'Amazon S3' },
-        { value: 'Alibaba', label: 'Alibaba Cloud OSS' },
+        { value: 'RustFS', label: 'RustFS (自建对象存储)' },
         { value: 'Minio', label: 'MinIO' },
+        { value: 'Alibaba', label: 'Alibaba Cloud OSS' },
+        { value: 'Cloudflare', label: 'Cloudflare R2' },
         { value: 'DigitalOcean', label: 'DigitalOcean Spaces' },
+        { value: 'Ceph', label: 'Ceph Object Gateway' },
+        { value: 'Other', label: 'Other S3 Compatible' },
       ],
     },
     {
@@ -207,31 +221,63 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
       label: 'Access Key ID',
       type: 'text',
       required: true,
-      placeholder: 'Access Key ID',
+      placeholder: 'AKIAIOSFODNN7EXAMPLE',
     },
     {
       key: 'secret_access_key',
       label: 'Secret Access Key',
       type: 'password',
       required: true,
-      placeholder: 'Secret Access Key',
-    },
-    {
-      key: 'region',
-      label: 'Region',
-      type: 'text',
-      required: false,
-      placeholder: 'us-east-1',
-      defaultValue: 'us-east-1',
+      placeholder: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
     },
     {
       key: 'endpoint',
-      label: 'Endpoint',
+      label: 'Endpoint (S3终端节点地址)',
       type: 'text',
       required: false,
-      placeholder: 'Endpoint',
+      placeholder: '例如: s3.us-east-1.amazonaws.com 或 https://xxx.r2.cloudflarestorage.com',
+    },
+    {
+      key: 'region',
+      label: 'Region (区域)',
+      type: 'text',
+      required: false,
+      placeholder: 'us-east-1 (Cloudflare R2可填 auto)',
+      defaultValue: 'us-east-1',
+    },
+    {
+      key: 'bucket',
+      label: 'Bucket / 默认存储桶名称 (选填)',
+      type: 'text',
+      required: false,
+      placeholder: 'my-bucket-name',
+    },
+    {
+      key: 'force_path_style',
+      label: 'Force Path Style (强制路径样式，MinIO/Ceph建议设为 true)',
+      type: 'select',
+      required: false,
+      defaultValue: 'false',
+      options: [
+        { value: 'false', label: 'false (默认域名样式 bucket.endpoint)' },
+        { value: 'true', label: 'true (路径样式 endpoint/bucket，推荐MinIO)' },
+      ],
+    },
+    {
+      key: 'acl',
+      label: 'Bucket ACL 权限 (选填)',
+      type: 'select',
+      required: false,
+      defaultValue: 'private',
+      options: [
+        { value: 'private', label: 'private (私有)' },
+        { value: 'public-read', label: 'public-read (公共读)' },
+        { value: 'public-read-write', label: 'public-read-write (公共读写)' },
+        { value: 'authenticated-read', label: 'authenticated-read' },
+      ],
     },
   ],
+
   drive: [
     {
       key: 'scope',
@@ -265,7 +311,9 @@ const CONFIG_PARAMETER_TEMPLATES: Record<
 
 export default function Configs() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
   const [configs, setConfigs] = useState<RcloneConfig[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
@@ -351,6 +399,7 @@ export default function Configs() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [quotaMap, setQuotaMap] = useState<Record<string, RcloneAboutInfo>>({});
 
   // 用于防止重复请求的 ref
   const isLoadingRef = useRef(false);
@@ -374,6 +423,9 @@ export default function Configs() {
       setConfigs(configList);
       window.dispatchEvent(new CustomEvent('rclone-configs-updated', { detail: configList }));
 
+      // 并行获取全盘容量配额
+      getAllRemotesAbout(configList).then(setQuotaMap).catch(console.error);
+
       if (configList.length === 0) {
         toast.info('当前没有配置，请添加您的第一个配置');
       } else {
@@ -390,6 +442,7 @@ export default function Configs() {
   }, []);
 
   // 组件加载时获取配置
+
   useEffect(() => {
     loadConfigs();
   }, [loadConfigs]);
@@ -563,13 +616,24 @@ export default function Configs() {
 
   // 处理参数变化
   const handleParameterChange = (key: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      parameters: {
+    setFormData(prev => {
+      const updatedParams = {
         ...prev.parameters,
         [key]: value,
-      },
-    }));
+      };
+
+      // 智能预设联动：如果是自建 S3 (RustFS, MinIO, Ceph)，自动将 force_path_style 预设为 'true'
+      if (key === 'provider' && ['RustFS', 'Minio', 'Ceph'].includes(value)) {
+        if (!updatedParams.force_path_style) {
+          updatedParams.force_path_style = 'true';
+        }
+      }
+
+      return {
+        ...prev,
+        parameters: updatedParams,
+      };
+    });
   };
 
   // 获取当前配置类型的参数模板
@@ -749,7 +813,9 @@ export default function Configs() {
                 {/* 装饰性背景柔和发光圆，随hover变化 */}
                 <div className="bg-primary/10 group-hover:bg-primary/20 pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full blur-3xl transition-all duration-700 group-hover:scale-125" />
 
-                <div className="relative z-10 flex flex-1 flex-col p-6">
+                <div
+                  className="group/card relative z-10 flex flex-1 cursor-pointer flex-col p-6"
+                  onClick={() => navigate(`/explorer?remote=${encodeURIComponent(config.name)}`)}>
                   {/* 卡片头部：图标、名称、状态与设置下拉菜单 */}
                   <div className="mb-5 flex items-start justify-between gap-4">
                     <div className="flex min-w-0 flex-1 items-center space-x-3.5">
@@ -809,6 +875,7 @@ export default function Configs() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={e => e.stopPropagation()}
                             className="hover:border-border hover:bg-muted/50 animate-in fade-in h-8 w-8 rounded-full border border-transparent transition-all">
                             <Settings className="text-muted-foreground/80 group-hover:text-foreground h-4 w-4" />
                           </Button>
@@ -864,6 +931,26 @@ export default function Configs() {
                       </span>
                     </div>
 
+                    {/* 容量配额指示器 */}
+                    {quotaMap[config.name] && quotaMap[config.name].total ? (
+                      <div className="border-border/40 bg-background/50 mt-2 space-y-1.5 rounded-lg border p-2.5 text-xs">
+                        <div className="flex items-center justify-between font-mono text-[10px] font-bold">
+                          <span className="text-muted-foreground">{t('usedSpace')}</span>
+                          <span className="text-foreground">
+                            {formatBytes(quotaMap[config.name].used)} / {formatBytes(quotaMap[config.name].total)}
+                          </span>
+                        </div>
+                        <div className="bg-muted/60 h-1.5 w-full overflow-hidden rounded-full">
+                          <div
+                            className="bg-primary h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${Math.min(100, Math.round(((quotaMap[config.name].used || 0) / (quotaMap[config.name].total || 1)) * 100))}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
                     {config.lastUsed && (
                       <div className="flex items-center justify-between gap-4">
                         <span className="text-muted-foreground/85 shrink-0 text-[10px] font-semibold tracking-wider uppercase">
@@ -877,11 +964,11 @@ export default function Configs() {
                   </div>
                 </div>
 
-                {/* 底部功能区：连接容量与测试连接按钮 */}
+                {/* 底部功能区：Smart Remote Hub 4大控制动作 */}
                 <div className="relative z-10 mt-auto px-6 pt-0 pb-6">
                   {/* 容量进度条 */}
                   {testState.status === 'success' && testState.total !== undefined && testState.used !== undefined && (
-                    <div className="from-primary/5 border-primary/10 animate-in slide-in-from-bottom-2 mb-4 space-y-2 rounded-xl border bg-gradient-to-r to-transparent p-3 shadow-sm duration-300">
+                    <div className="from-primary/5 border-primary/10 animate-in slide-in-from-bottom-2 mb-3 space-y-2 rounded-xl border bg-gradient-to-r to-transparent p-3 shadow-sm duration-300">
                       <div className="text-muted-foreground flex justify-between text-[11px] font-bold">
                         <span className="flex items-center gap-1">
                           <Database className="text-primary h-3 w-3" />
@@ -901,24 +988,69 @@ export default function Configs() {
                     </div>
                   )}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleTestConnection(config.name)}
-                    disabled={testState.status === 'testing'}
-                    className="hover:bg-primary hover:text-primary-foreground group w-full gap-2 transition-all duration-300">
-                    {testState.status === 'testing' ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>{t('config.testing')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Activity className="h-3.5 w-3.5 group-hover:animate-pulse" />
-                        <span>{t('config.testConnection')}</span>
-                      </>
-                    )}
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* 1. 进入文件管理 */}
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={e => {
+                        e.stopPropagation();
+                        navigate(`/explorer?remote=${encodeURIComponent(config.name)}`);
+                      }}
+                      className="from-primary shadow-primary/20 bg-gradient-to-r to-teal-600 font-semibold shadow-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+                      <FolderOpen className="mr-1.5 h-3.5 w-3.5" />
+                      <span>{t('Explorer')}</span>
+                    </Button>
+
+                    {/* 2. 本地虚拟磁盘挂载 */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={e => {
+                        e.stopPropagation();
+                        navigate(`/mounts?remote=${encodeURIComponent(config.name)}`);
+                      }}
+                      className="hover:bg-primary/10 hover:text-primary font-semibold transition-all duration-200">
+                      <HardDrive className="mr-1.5 h-3.5 w-3.5" />
+                      <span>{t('Mounts')}</span>
+                    </Button>
+
+                    {/* 3. 定时同步规则 */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={e => {
+                        e.stopPropagation();
+                        navigate(`/schedules?srcRemote=${encodeURIComponent(config.name)}`);
+                      }}
+                      className="hover:bg-primary/10 hover:text-primary font-semibold transition-all duration-200">
+                      <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
+                      <span>{t('scheduledTasks')}</span>
+                    </Button>
+
+                    {/* 4. 测试连接探针 */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleTestConnection(config.name);
+                      }}
+                      disabled={testState.status === 'testing'}
+                      className="hover:bg-primary/10 hover:text-primary group font-semibold transition-all duration-200">
+                      {testState.status === 'testing' ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          <span>{t('config.testing')}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Activity className="mr-1.5 h-3.5 w-3.5 group-hover:animate-pulse" />
+                          <span>{t('config.testConnection')}</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             );
@@ -950,12 +1082,16 @@ export default function Configs() {
             setIsAddDialogOpen(true);
           }
         }}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
-          <DialogHeader>
+        <DialogContent
+          className="flex max-h-[85vh] flex-col p-0 sm:max-w-[600px]"
+          onOpenAutoFocus={e => e.preventDefault()}>
+          <DialogHeader className="shrink-0 border-b p-6 pb-4">
             <DialogTitle>{t('Add Configuration')}</DialogTitle>
             <DialogDescription>{t('config.addConfigDesc')}</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+
+          {/* 可调高度的内部滚动容器 */}
+          <div className="flex-1 space-y-4 overflow-y-auto p-6">
             <div className="grid gap-2">
               <Label htmlFor="name">{t('Configuration Name')}</Label>
               <Input
@@ -968,7 +1104,7 @@ export default function Configs() {
             <div className="grid gap-2">
               <Label htmlFor="type">{t('Configuration Type')}</Label>
               <Select value={formData.type} onValueChange={handleTypeChange}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full font-medium">
                   <SelectValue placeholder={t('config.selectConfigType')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -999,7 +1135,7 @@ export default function Configs() {
                         <Select
                           value={formData.parameters[param.key] || param.defaultValue || ''}
                           onValueChange={(value: string) => handleParameterChange(param.key, value)}>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full font-medium">
                             <SelectValue
                               placeholder={t('config.selectPlaceholder', {
                                 label: t(param.label),
@@ -1037,7 +1173,8 @@ export default function Configs() {
               </div>
             )}
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="bg-muted/20 shrink-0 border-t p-6 pt-4">
             <Button variant="outline" onClick={handleCancelAdd} disabled={submitting}>
               {t('Cancel')}
             </Button>
@@ -1065,12 +1202,16 @@ export default function Configs() {
             setIsEditDialogOpen(true);
           }
         }}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
-          <DialogHeader>
+        <DialogContent
+          className="flex max-h-[85vh] flex-col p-0 sm:max-w-[600px]"
+          onOpenAutoFocus={e => e.preventDefault()}>
+          <DialogHeader className="shrink-0 border-b p-6 pb-4">
             <DialogTitle>{t('Edit Configuration')}</DialogTitle>
             <DialogDescription>{t('config.editConfigDesc')}</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+
+          {/* 可调高度的内部滚动容器 */}
+          <div className="flex-1 space-y-4 overflow-y-auto p-6">
             <div className="grid gap-2">
               <Label htmlFor="edit-name">{t('Configuration Name')}</Label>
               <Input
@@ -1085,7 +1226,7 @@ export default function Configs() {
             <div className="grid gap-2">
               <Label htmlFor="edit-type">{t('Configuration Type')}</Label>
               <Select value={formData.type} onValueChange={handleTypeChange} disabled={true}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full font-medium">
                   <SelectValue placeholder={t('config.selectConfigType')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -1117,7 +1258,7 @@ export default function Configs() {
                         <Select
                           value={formData.parameters[param.key] || param.defaultValue || ''}
                           onValueChange={(value: string) => handleParameterChange(param.key, value)}>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full font-medium">
                             <SelectValue
                               placeholder={t('config.selectPlaceholder', {
                                 label: t(param.label),
@@ -1148,7 +1289,8 @@ export default function Configs() {
               </div>
             )}
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="bg-muted/20 shrink-0 border-t p-6 pt-4">
             <Button variant="outline" onClick={handleCancelEdit} disabled={submitting}>
               {t('Cancel')}
             </Button>

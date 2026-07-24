@@ -1,26 +1,21 @@
 import {
   Activity,
+  CalendarClock,
   CircleDot,
   Cloud,
-  Database,
   FolderOpen,
   Gauge,
   Globe,
   Link2,
-  Loader2,
-  HardDrive as LocalDrive,
   LogOut,
   Moon,
-  Search,
-  Server,
-  Settings,
   Sun,
   Terminal,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import logo from '@/assets/appIcon.png';
 import {
@@ -35,7 +30,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useUser } from '@/hooks/use-user';
-import { type RcloneConfig, getAllConfigs } from '@/pages/config/services';
+import { getBandwidthLimit, getCoreStats } from '@/pages/tasks/services';
 
 export function AppSidebar() {
   const { t, i18n } = useTranslation();
@@ -43,15 +38,13 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { clearUser } = useUser();
 
   // States
-  const [remotes, setRemotes] = useState<RcloneConfig[]>([]);
-  const [loadingRemotes, setLoadingRemotes] = useState(false);
-  const [remoteSearchQuery, setRemoteSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
-  const [simulatedSpeed, setSimulatedSpeed] = useState({
+
+  const [realLimit, setRealLimit] = useState('off');
+  const [trafficSpeed, setTrafficSpeed] = useState({
     down: '0 B/s',
     up: '0 B/s',
   });
@@ -60,49 +53,61 @@ export function AppSidebar() {
   const rcloneRc = localStorage.getItem('rclone-rc') || 'http://127.0.0.1:5572';
   const cleanRcHost = rcloneRc.replace(/^https?:\/\//, '');
 
+  // Helper to format bytes per second
+
+  const formatSpeed = (bytes: number) => {
+    if (!bytes || bytes <= 0) return '0 B/s';
+    if (bytes < 1024) return `${bytes.toFixed(0)} B/s`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB/s`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB/s`;
+  };
+
+  // Fetch real traffic & limit
   useEffect(() => {
     setMounted(true);
-    // Simulating minor network traffic changes to make UI feel alive
-    const interval = setInterval(() => {
-      const downVal = Math.random() > 0.7 ? `${(Math.random() * 200 + 10).toFixed(1)} KB/s` : '0 B/s';
-      const upVal = Math.random() > 0.8 ? `${(Math.random() * 50 + 2).toFixed(1)} KB/s` : '0 B/s';
-      setSimulatedSpeed({ down: downVal, up: upVal });
-    }, 4000);
 
-    return () => clearInterval(interval);
-  }, []);
-
-  // Fetch configs (remotes)
-  const fetchConfigs = useCallback(async () => {
-    try {
-      setLoadingRemotes(true);
-      const data = await getAllConfigs();
-      setRemotes(data);
-    } catch (err) {
-      console.error('Failed to fetch configs in sidebar', err);
-    } finally {
-      setLoadingRemotes(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchConfigs();
-
-    // Listen to configs updated custom event
-    const handleConfigsUpdated = (e: Event) => {
-      const customEvent = e as CustomEvent<RcloneConfig[]>;
-      if (customEvent.detail) {
-        setRemotes(customEvent.detail);
-      } else {
-        fetchConfigs();
+    const updateRealStats = async () => {
+      try {
+        const stats = await getCoreStats();
+        if (stats) {
+          setTrafficSpeed({
+            down: formatSpeed(stats.speed || 0),
+            up: '0 B/s',
+          });
+        }
+      } catch {
+        // Ignore
       }
     };
 
-    window.addEventListener('rclone-configs-updated', handleConfigsUpdated);
-    return () => {
-      window.removeEventListener('rclone-configs-updated', handleConfigsUpdated);
+    const updateLimit = async () => {
+      try {
+        const lim = await getBandwidthLimit();
+        if (lim?.rate) {
+          setRealLimit(lim.rate);
+        }
+      } catch {
+        // Ignore
+      }
     };
-  }, [fetchConfigs]);
+
+    updateRealStats();
+    updateLimit();
+    const interval = setInterval(updateRealStats, 3000);
+
+    const handleBwUpdate = (e: Event) => {
+      const custom = e as CustomEvent<string>;
+      if (custom.detail) {
+        setRealLimit(custom.detail);
+      }
+    };
+    window.addEventListener('rclone-bwlimit-updated', handleBwUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('rclone-bwlimit-updated', handleBwUpdate);
+    };
+  }, []);
 
   const handleLogout = () => {
     clearUser();
@@ -127,36 +132,6 @@ export function AppSidebar() {
     return location.pathname === url;
   };
 
-  // Check if a remote is active (based on URL query parameter)
-  const isRemoteActive = (remoteName: string) => {
-    return location.pathname === '/configs' && searchParams.get('search') === remoteName;
-  };
-
-  // Map remote types to Lucide icons
-  const getRemoteIcon = (type: string) => {
-    switch (type?.toLowerCase()) {
-      case 'drive':
-      case 'dropbox':
-      case 'onedrive':
-      case 'box':
-      case 's3':
-        return Cloud;
-      case 'ftp':
-      case 'sftp':
-        return Server;
-      case 'webdav':
-      case 'http':
-        return Globe;
-      case 'local':
-        return LocalDrive;
-      default:
-        return Database;
-    }
-  };
-
-  // Filtered remotes based on sidebar search input
-  const filteredRemotes = remotes.filter(remote => remote.name.toLowerCase().includes(remoteSearchQuery.toLowerCase()));
-
   const mainNavItems = [
     {
       title: t('Dashboard'),
@@ -164,9 +139,9 @@ export function AppSidebar() {
       icon: Gauge,
     },
     {
-      title: t('Configs'),
+      title: '存储与云盘',
       url: '/configs',
-      icon: Settings,
+      icon: Cloud,
     },
   ];
 
@@ -183,10 +158,16 @@ export function AppSidebar() {
       icon: Activity,
     },
     {
+      title: t('scheduledTasks'),
+      url: '/schedules',
+      icon: CalendarClock,
+    },
+    {
       title: t('Mounts'),
       url: '/mounts',
       icon: Link2,
     },
+
     {
       title: t('Logs'),
       url: '/logs',
@@ -281,89 +262,6 @@ export function AppSidebar() {
 
         <SidebarSeparator className="bg-border/40" />
 
-        {/* Dynamic Cloud Remotes List */}
-        <div>
-          {state === 'expanded' && (
-            <div className="mb-2 flex items-center justify-between px-3">
-              <p className="text-muted-foreground/70 text-[10px] font-semibold tracking-widest uppercase">
-                {t('Remotes')}
-              </p>
-              {remotes.length > 0 && (
-                <span className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold">
-                  {remotes.length}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Search box for remotes in Sidebar - only when expanded */}
-          {state === 'expanded' && remotes.length > 3 && (
-            <div className="mb-2 px-2">
-              <div className="border-border/40 bg-muted/30 focus-within:border-primary/50 relative flex items-center rounded-lg border px-2.5 py-1 transition-colors duration-200">
-                <Search className="text-muted-foreground size-3.5 shrink-0" />
-                <input
-                  type="text"
-                  placeholder={t('Search remotes...')}
-                  value={remoteSearchQuery}
-                  onChange={e => setRemoteSearchQuery(e.target.value)}
-                  className="text-foreground placeholder:text-muted-foreground/60 ml-2 w-full bg-transparent text-xs outline-none"
-                />
-              </div>
-            </div>
-          )}
-
-          <SidebarMenu className="custom-scrollbar max-h-[220px] space-y-0.5 overflow-y-auto pr-0.5">
-            {loadingRemotes ? (
-              <div className="text-muted-foreground flex items-center justify-center gap-2 py-4">
-                <Loader2 className="size-3.5 animate-spin" />
-                {state === 'expanded' && <span className="text-xs">{t('Loading') || 'Loading...'}</span>}
-              </div>
-            ) : filteredRemotes.length === 0 ? (
-              state === 'expanded' && (
-                <p className="text-muted-foreground/60 py-4 text-center text-xs italic">
-                  {remoteSearchQuery ? t('No configurations found') : t('No configurations found')}
-                </p>
-              )
-            ) : (
-              filteredRemotes.map(remote => {
-                const RemoteIcon = getRemoteIcon(remote.type);
-                const active = isRemoteActive(remote.name);
-                return (
-                  <SidebarMenuItem key={remote.name}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      tooltip={state === 'collapsed' ? remote.name : undefined}
-                      className={`group/item relative rounded-lg transition-all duration-200 ease-in-out ${
-                        active
-                          ? 'bg-primary/15 text-primary border-primary border-l-2 pl-2.5 font-medium'
-                          : 'hover:bg-primary/5 hover:text-primary active:scale-[0.98]'
-                      } ${state === 'collapsed' ? 'w-full justify-center p-3' : 'h-9 px-3 py-2'} `}>
-                      <Link
-                        to={`/configs?search=${encodeURIComponent(remote.name)}`}
-                        className="flex w-full items-center">
-                        <RemoteIcon
-                          className={`shrink-0 transition-transform duration-200 ${state === 'collapsed' ? 'size-5' : 'mr-2.5 size-3.5'} group-hover/item:scale-110`}
-                        />
-                        {state === 'expanded' && (
-                          <div className="flex w-full min-w-0 items-center justify-between">
-                            <span className="truncate text-xs font-semibold">{remote.name}</span>
-                            <span className="py-0.2 bg-muted/60 text-muted-foreground origin-right scale-90 rounded px-1 font-mono text-[9px] font-medium">
-                              {remote.type}
-                            </span>
-                          </div>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })
-            )}
-          </SidebarMenu>
-        </div>
-
-        <SidebarSeparator className="bg-border/40" />
-
         {/* Tools Section */}
         <div>
           {state === 'expanded' && (
@@ -438,16 +336,18 @@ export function AppSidebar() {
               </div>
               <div className="flex items-center justify-between">
                 <span>{t('Speed Limit')}:</span>
-                <span className="text-foreground font-semibold">{t('Unlimited')}</span>
+                <span className="text-primary font-mono font-semibold">
+                  {realLimit === 'off' ? t('unlimited') : realLimit}
+                </span>
               </div>
 
               {/* Traffic details */}
               <div className="border-border/20 flex items-center justify-between border-t pt-1 text-[9px]">
-                <span className="flex items-center gap-0.5">
-                  <span className="text-emerald-500">↓</span> {simulatedSpeed.down}
+                <span className="flex items-center gap-0.5 font-mono">
+                  <span className="text-emerald-500">↓</span> {trafficSpeed.down}
                 </span>
-                <span className="flex items-center gap-0.5">
-                  <span className="text-blue-500">↑</span> {simulatedSpeed.up}
+                <span className="flex items-center gap-0.5 font-mono">
+                  <span className="text-blue-500">↑</span> {trafficSpeed.up}
                 </span>
               </div>
             </div>

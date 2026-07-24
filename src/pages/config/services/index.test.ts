@@ -177,21 +177,22 @@ describe('Config services', () => {
   });
 
   describe('testConfig', () => {
-    it('should return connection success with storage capacity details', async () => {
+    it('should return connection success via operations/list探针', async () => {
       vi.mocked(net.post).mockResolvedValueOnce({
-        total: 1000,
-        used: 400,
-        free: 600,
+        list: [],
       });
 
       const result = await testConfig('remote1');
 
-      expect(result).toEqual({
-        success: true,
-        total: 1000,
-        used: 400,
-        free: 600,
+      expect(net.post).toHaveBeenCalledWith({
+        url: '/operations/list',
+        data: {
+          fs: 'remote1:',
+          remote: '',
+          opt: { recurse: false },
+        },
       });
+      expect(result.success).toBe(true);
     });
 
     it('should return success false if API returns error field', async () => {

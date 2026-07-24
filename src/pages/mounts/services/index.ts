@@ -87,3 +87,118 @@ export const deleteMount = async (mountPoint: string): Promise<void> => {
     throw error;
   }
 };
+
+/**
+ * 刷新 VFS 目录/文件缓存 (vfs/refresh)
+ */
+export const refreshVfsCache = async (fs: string, dir = ''): Promise<void> => {
+  try {
+    const formattedFs = fs.includes(':') ? fs : `${fs}:`;
+    await net.post({
+      url: '/vfs/refresh',
+      data: {
+        fs: formattedFs,
+        dir,
+        recursive: true,
+      },
+    });
+  } catch (error) {
+    console.error(`刷新 VFS 缓存失败 ${fs}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * 清除 VFS 缓存 (vfs/forget)
+ */
+export const forgetVfsCache = async (fs: string): Promise<void> => {
+  try {
+    const formattedFs = fs.includes(':') ? fs : `${fs}:`;
+    await net.post({
+      url: '/vfs/forget',
+      data: {
+        fs: formattedFs,
+      },
+    });
+  } catch (error) {
+    console.error(`清除 VFS 缓存失败 ${fs}:`, error);
+    throw error;
+  }
+};
+
+export interface RcloneServeItem {
+  id?: string;
+  type: string;
+  addr: string;
+  fs: string;
+}
+
+export interface ServeListResponse {
+  list?: RcloneServeItem[];
+}
+
+/**
+ * 获取当前正在运行的外部共享服务列表 (serve/list)
+ */
+export const getServeList = async (): Promise<RcloneServeItem[]> => {
+  try {
+    const response = await net.post<ServeListResponse>({
+      url: '/serve/list',
+      data: {},
+    });
+    return response.list || [];
+  } catch (error) {
+    console.error('获取服务共享列表失败:', error);
+    return [];
+  }
+};
+
+/**
+ * 开启一个网络协议共享服务 (WebDAV / HTTP / FTP / DLNA)
+ */
+export const startServe = async (
+  type: 'webdav' | 'http' | 'ftp' | 'dlna',
+  fs: string,
+  addr: string,
+  user = '',
+  pass = '',
+): Promise<void> => {
+  try {
+    const formattedFs = fs.includes(':') ? fs : `${fs}:`;
+    const data: Record<string, unknown> = {
+      fs: formattedFs,
+      addr,
+      _async: true,
+    };
+    if (user && pass) {
+      data.user = user;
+      data.pass = pass;
+    }
+
+    await net.post({
+      url: `/serve/${type}`,
+      data,
+    });
+  } catch (error) {
+    console.error(`启动共享服务失败 (${type}):`, error);
+    throw error;
+  }
+};
+
+/**
+ * 停止指定网络协议共享服务
+ */
+export const stopServe = async (type: string, addr: string): Promise<void> => {
+  try {
+    await net.post({
+      url: '/serve/stop',
+      data: {
+        type,
+        addr,
+      },
+    });
+  } catch (error) {
+    console.error(`停止共享服务失败 ${type}@${addr}:`, error);
+    throw error;
+  }
+};

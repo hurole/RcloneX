@@ -1,6 +1,19 @@
-import { FolderSymlink, HardDrive, Info, Link2, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import {
+  FolderSymlink,
+  Globe,
+  HardDrive,
+  Info,
+  Link2,
+  Loader2,
+  Plus,
+  RefreshCw,
+  RotateCw,
+  StopCircle,
+  Trash2,
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,16 +29,36 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type RcloneConfig, getAllConfigs } from '@/pages/config/services';
-import { type RcloneMountItem, createMount, deleteMount, getMountList, getMountTypes } from './services';
+import {
+  type RcloneMountItem,
+  type RcloneServeItem,
+  createMount,
+  deleteMount,
+  forgetVfsCache,
+  getMountList,
+  getMountTypes,
+  getServeList,
+  refreshVfsCache,
+  startServe,
+  stopServe,
+} from './services';
 
 export default function Mounts() {
   const { t } = useTranslation();
 
-  // States
+  // Mount States
   const [mounts, setMounts] = useState<RcloneMountItem[]>([]);
   const [mountTypes, setMountTypes] = useState<string[]>(['mount']);
   const [remotes, setRemotes] = useState<RcloneConfig[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Serve States
+  const [serves, setServes] = useState<RcloneServeItem[]>([]);
+  const [isServeOpen, setIsServeOpen] = useState(false);
+  const [serveType, setServeType] = useState<'webdav' | 'http' | 'ftp' | 'dlna'>('webdav');
+  const [serveRemote, setServeRemote] = useState('');
+  const [serveAddr, setServeAddr] = useState('127.0.0.1:8080');
+  const [startingServe, setStartingServe] = useState(false);
 
   // Dialog fields
   const [isMountOpen, setIsMountOpen] = useState(false);
@@ -34,25 +67,35 @@ export default function Mounts() {
   const [selectedType, setSelectedType] = useState('mount');
   const [mounting, setMounting] = useState(false);
 
-  // Load mounts list
-  const loadMounts = useCallback(async (isSilent = false) => {
+  // Load mounts list & serves
+  const loadData = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
-      const data = await getMountList();
-      setMounts(data);
-    } catch (err) {
-      console.error('Failed to get mounts list', err);
+      const [mountData, serveData] = await Promise.all([getMountList(), getServeList()]);
+      setMounts(mountData);
+      setServes(serveData);
+    } catch {
+      // Ignore
     } finally {
       if (!isSilent) setLoading(false);
     }
   }, []);
 
+  const [searchParams] = useSearchParams();
+
   useEffect(() => {
-    loadMounts();
+    loadData();
 
     // Fetch configurations and options
     getAllConfigs()
-      .then(setRemotes)
+      .then(data => {
+        setRemotes(data);
+        const urlRemote = searchParams.get('remote');
+        if (urlRemote && data.some(c => c.name === urlRemote)) {
+          setSelectedRemote(urlRemote);
+          setIsMountOpen(true);
+        }
+      })
       .catch(() => {});
     getMountTypes()
       .then(types => {
@@ -60,7 +103,55 @@ export default function Mounts() {
         if (types.length > 0) setSelectedType(types[0]);
       })
       .catch(() => {});
-  }, [loadMounts]);
+  }, [loadData, searchParams]);
+
+  // VFS Controls
+  const handleRefreshVfs = async (fs: string) => {
+    try {
+      await refreshVfsCache(fs);
+      toast.success(`${t('vfsRefresh')}: ${fs}`);
+    } catch {
+      toast.error('刷新 VFS 缓存失败');
+    }
+  };
+
+  const handleForgetVfs = async (fs: string) => {
+    try {
+      await forgetVfsCache(fs);
+      toast.success(`${t('vfsForget')}: ${fs}`);
+    } catch {
+      toast.error('清除 VFS 缓存失败');
+    }
+  };
+
+  // Serve Controls
+  const handleStartServe = async () => {
+    if (!serveRemote || !serveAddr.trim()) {
+      toast.error('请选择存储源并填写监听地址');
+      return;
+    }
+    setStartingServe(true);
+    try {
+      await startServe(serveType, serveRemote, serveAddr.trim());
+      toast.success(`成功开启 ${serveType.toUpperCase()} 网络共享服务 (${serveAddr})`);
+      setIsServeOpen(false);
+      loadData(true);
+    } catch {
+      toast.error('开启服务共享失败');
+    } finally {
+      setStartingServe(false);
+    }
+  };
+
+  const handleStopServe = async (item: RcloneServeItem) => {
+    try {
+      await stopServe(item.type, item.addr);
+      toast.success('服务共享已停止');
+      loadData(true);
+    } catch {
+      toast.error('停止服务共享失败');
+    }
+  };
 
   // Handle mount creation
   const handleCreateMount = async () => {
@@ -74,8 +165,8 @@ export default function Mounts() {
       toast.success(t('Mount Successful') || '挂载成功');
       setIsMountOpen(false);
       setMountPath('');
-      loadMounts(true);
-    } catch (err) {
+      loadData(true);
+    } catch {
       toast.error('挂载失败，请确保本地挂载路径合法、目录存在，且拥有 FUSE / WinFsp 驱动环境');
     } finally {
       setMounting(false);
@@ -88,8 +179,8 @@ export default function Mounts() {
     try {
       await deleteMount(mountPoint);
       toast.success(t('Unmount Successful') || '卸载挂载点成功');
-      loadMounts(true);
-    } catch (err) {
+      loadData(true);
+    } catch {
       toast.error('卸载挂载点失败，可能有文件进程正在占用');
     }
   };
@@ -103,10 +194,19 @@ export default function Mounts() {
             将云端网盘映射挂载到本地目录，在文件管理器中像本地盘符一样浏览。
           </p>
         </div>
-        <Button onClick={() => setIsMountOpen(true)} className="cursor-pointer rounded-lg font-semibold shadow-md">
-          <Plus className="mr-2 size-4" />
-          {t('Create Mount Point')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsServeOpen(true)}
+            className="cursor-pointer rounded-lg font-semibold shadow-sm">
+            <Globe className="mr-2 size-4 text-blue-500" />
+            {t('startServe')}
+          </Button>
+          <Button onClick={() => setIsMountOpen(true)} className="cursor-pointer rounded-lg font-semibold shadow-md">
+            <Plus className="mr-2 size-4" />
+            {t('Create Mount Point')}
+          </Button>
+        </div>
       </div>
 
       {/* Info Tips Alert */}
@@ -131,7 +231,7 @@ export default function Mounts() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => loadMounts()}
+            onClick={() => loadData()}
             className="h-8 w-8 cursor-pointer rounded-lg"
             disabled={loading}>
             <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -170,14 +270,33 @@ export default function Mounts() {
                         {mount.MountPoint}
                       </td>
                       <td className="p-3.5 pr-6 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteMount(mount.MountPoint)}
-                          className="h-8 cursor-pointer rounded-lg px-2.5 text-red-600 hover:bg-red-50/15">
-                          <Trash2 className="mr-1.5 size-3.5" />
-                          卸载挂载
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            title={t('vfsRefresh')}
+                            onClick={() => handleRefreshVfs(mount.Fs)}
+                            className="h-8 cursor-pointer rounded-lg px-2 text-xs">
+                            <RotateCw className="mr-1 size-3 text-blue-500" />
+                            {t('vfsRefresh')}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title={t('vfsForget')}
+                            onClick={() => handleForgetVfs(mount.Fs)}
+                            className="h-8 cursor-pointer rounded-lg px-2 text-xs">
+                            {t('vfsForget')}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteMount(mount.MountPoint)}
+                            className="h-8 cursor-pointer rounded-lg px-2 text-red-600 hover:bg-red-50/15">
+                            <Trash2 className="mr-1 size-3" />
+                            卸载
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -271,6 +390,166 @@ export default function Mounts() {
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   正在挂载
+                </>
+              ) : (
+                t('Confirm')
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Network Serves List Card */}
+      <Card className="border-border/50 overflow-hidden border shadow-sm">
+        <CardHeader className="bg-muted/20 border-border/40 flex flex-row items-center justify-between border-b p-4">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-sm font-bold">
+              <Globe className="text-primary size-4" />
+              {t('activeServes')}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              将云盘一键广播发布为 WebDAV、HTTP 或 FTP 端口网络服务。
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => loadData()}
+            className="h-8 w-8 cursor-pointer rounded-lg"
+            disabled={loading}>
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+        </CardHeader>
+
+        <CardContent className="flex min-h-[160px] flex-col justify-between p-0">
+          {serves.length === 0 ? (
+            <div className="text-muted-foreground/50 flex flex-1 flex-col items-center justify-center gap-2 py-10 italic">
+              <Globe className="text-muted-foreground size-8 opacity-30" />
+              <span className="text-xs font-semibold">当前未运行任何网络协议共享服务</span>
+            </div>
+          ) : (
+            <div className="w-full overflow-x-auto">
+              <table className="w-full border-collapse text-left text-xs">
+                <thead>
+                  <tr className="border-border/40 bg-muted/10 text-muted-foreground border-b font-bold tracking-wider uppercase">
+                    <th className="p-3.5 pl-6">{t('serveType')}</th>
+                    <th className="p-3.5">云端盘路径 (Fs)</th>
+                    <th className="p-3.5">{t('listenAddr')}</th>
+                    <th className="p-3.5 pr-6 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-border/20 divide-y">
+                  {serves.map((item, idx) => (
+                    <tr
+                      key={item.id || `${item.type}-${idx}`}
+                      className="hover:bg-muted/20 font-medium transition-colors">
+                      <td className="p-3.5 pl-6">
+                        <span className="bg-primary/10 text-primary border-primary/20 rounded-md border px-2 py-0.5 font-mono text-xs font-bold uppercase">
+                          {item.type}
+                        </span>
+                      </td>
+                      <td className="text-foreground p-3.5 font-semibold">{item.fs}</td>
+                      <td className="text-muted-foreground p-3.5 font-mono font-semibold">{item.addr}</td>
+                      <td className="p-3.5 pr-6 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleStopServe(item)}
+                          className="h-8 cursor-pointer rounded-lg px-2 text-red-600 hover:bg-red-50/15">
+                          <StopCircle className="mr-1 size-3.5" />
+                          {t('stopServe')}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Start Serve Dialog */}
+      <Dialog open={isServeOpen} onOpenChange={setIsServeOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-bold">
+              <Globe className="text-primary size-5" />
+              {t('startServe')}
+            </DialogTitle>
+            <DialogDescription>将远程存储暴露发布为 WebDAV、HTTP、FTP 端口共享。</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid gap-2">
+              <Label className="text-sm font-bold">{t('serveType')}</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {(['webdav', 'http', 'ftp', 'dlna'] as const).map(type => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setServeType(type)}
+                    className={`cursor-pointer rounded-xl border px-3 py-2 text-xs font-bold uppercase transition-all duration-200 ${
+                      serveType === type
+                        ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                        : 'border-border/60 hover:bg-muted/30 text-muted-foreground'
+                    }`}>
+                    {type}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="serve-remote" className="text-sm font-bold">
+                选择共享存储源
+              </Label>
+              <Select value={serveRemote} onValueChange={setServeRemote}>
+                <SelectTrigger id="serve-remote" className="w-full font-semibold">
+                  <SelectValue placeholder="选择云盘/目录" />
+                </SelectTrigger>
+                <SelectContent>
+                  {remotes.map(remote => (
+                    <SelectItem key={remote.name} value={remote.name} className="font-semibold">
+                      {remote.name}:
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="serve-addr" className="text-sm font-bold">
+                {t('listenAddr')}
+              </Label>
+              <Input
+                id="serve-addr"
+                value={serveAddr}
+                onChange={e => setServeAddr(e.target.value)}
+                placeholder="例如 127.0.0.1:8080 或 :8080"
+                disabled={startingServe}
+                className="font-mono text-xs font-medium"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsServeOpen(false)}
+              disabled={startingServe}
+              className="cursor-pointer">
+              {t('Cancel')}
+            </Button>
+            <Button
+              type="button"
+              onClick={handleStartServe}
+              disabled={startingServe || !serveRemote || !serveAddr.trim()}
+              className="bg-primary text-primary-foreground hover:bg-primary/95 cursor-pointer font-bold">
+              {startingServe ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  正在启动
                 </>
               ) : (
                 t('Confirm')

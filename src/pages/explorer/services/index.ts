@@ -120,3 +120,35 @@ export const copyJob = async (
     throw error;
   }
 };
+
+export interface PublicLinkResponse {
+  url: string;
+}
+
+/**
+ * 生成文件/目录的公开分享链接 (Public Link)
+ */
+export const getPublicLink = async (fs: string, remote: string, unlink = false, expire = ''): Promise<string> => {
+  try {
+    const formattedFs = fs.endsWith(':') ? fs : `${fs}:`;
+    const data: Record<string, unknown> = {
+      fs: formattedFs,
+      remote,
+    };
+    if (unlink) {
+      data.unlink = true;
+    }
+    if (expire) {
+      data.expire = expire;
+    }
+
+    const response = await net.post<PublicLinkResponse>({
+      url: '/operations/publiclink',
+      data,
+    });
+    return response.url || '';
+  } catch (error) {
+    console.error(`生成公开链接失败 (${fs}/${remote}):`, error);
+    throw error;
+  }
+};
