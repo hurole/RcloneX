@@ -1,24 +1,32 @@
 import {
   AlertTriangle,
   ArrowLeft,
+  BarChart3,
   ChevronRight,
   Copy,
+  Download,
   File,
   Folder,
   LayoutGrid,
   Link2,
   List,
   Loader2,
+  MoveRight,
+  Pencil,
   Plus,
   RefreshCw,
+  Search,
   Trash2,
+  Upload,
+  X,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -30,15 +38,28 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useSelection } from '@/hooks/use-selection';
+import { useUploadQueue } from '@/hooks/use-upload-queue';
 import { type RcloneConfig, getAllConfigs } from '@/pages/config/services';
+import { downloadFileBlob, downloadItemsAsZip, triggerBrowserDownload } from '@/shared/utils/transfer';
+import BatchActionBar from './components/BatchActionBar';
+import MoveDialog, { type MoveTarget } from './components/MoveDialog';
+import RenameDialog from './components/RenameDialog';
+import SizeDialog from './components/SizeDialog';
+import UploadQueueSheet from './components/UploadQueueSheet';
 import {
   type RcloneFileItem,
-  copyJob,
+  copyFileItem,
   deleteFile,
+  getDirectorySize,
   getPublicLink,
   listDirectory,
   makeDirectory,
+  moveItem,
   purgeDirectory,
+  renameItem,
+  searchFiles,
+  type SizeInfo,
 } from './services';
 
 export default function Explorer() {
@@ -61,7 +82,6 @@ export default function Explorer() {
   const [creatingFolder, setCreatingFolder] = useState(false);
 
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
-  const [copyTargetItem, setCopyTargetItem] = useState<RcloneFileItem | null>(null);
   const [targetRemote, setTargetRemote] = useState('');
   const [targetPath, setTargetPath] = useState('');
   const [copying, setCopying] = useState(false);
@@ -70,6 +90,45 @@ export default function Explorer() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteTargetItem, setDeleteTargetItem] = useState<RcloneFileItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Upload Queue
+  const uploadQueue = useUploadQueue();
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+
+  // Multi-select
+  const selection = useSelection();
+
+  // Search mode
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchResults, setSearchResults] = useState<RcloneFileItem[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchFallback, setSearchFallback] = useState(false);
+  const searchTimerRef = useRef<number | null>(null);
+
+  // Move / Rename / Size dialogs
+  const [isMoveOpen, setIsMoveOpen] = useState(false);
+  const [moveTargetItem, setMoveTargetItem] = useState<RcloneFileItem | null>(null);
+  const [moving, setMoving] = useState(false);
+
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [renameTargetItem, setRenameTargetItem] = useState<RcloneFileItem | null>(null);
+  const [renaming, setRenaming] = useState(false);
+
+  const [isSizeOpen, setIsSizeOpen] = useState(false);
+  const [sizeTargetPath, setSizeTargetPath] = useState('');
+  const [sizeLoading, setSizeLoading] = useState(false);
+  const [sizeInfo, setSizeInfo] = useState<SizeInfo | null>(null);
+
+  // Batch delete confirmation
+  const [isBatchDeleteOpen, setIsBatchDeleteOpen] = useState(false);
+  const [batchDeleting, setBatchDeleting] = useState(false);
+
+  // Drag & drop upload overlay
+  const [dragOver, setDragOver] = useState(false);
+
+  // Batch copy mode flag + hidden file input
+  const [isBatchCopy, setIsBatchCopy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize selected remote from URL search params
   useEffect(() => {
@@ -121,6 +180,8 @@ export default function Explorer() {
   // Directory traversal
   const navigateToFolder = (folderPath: string) => {
     setCurrentPath(folderPath);
+    selection.clear();
+    exitSearch();
   };
 
   const navigateUp = () => {
@@ -187,28 +248,36 @@ export default function Explorer() {
     }
   };
 
-  // Trigger copy
-  const handleOpenCopyDialog = (item: RcloneFileItem) => {
-    setCopyTargetItem(item);
-    // Default target selection
-    const defaultTarget = remotes.find(r => r.name !== selectedRemote)?.name || selectedRemote;
-    setTargetRemote(defaultTarget);
-    setTargetPath(currentPath);
-    setIsCopyDialogOpen(true);
-  };
-
   const handleConfirmCopy = async () => {
-    if (!copyTargetItem || !targetRemote) return;
+    if (!targetRemote) return;
+    if (!isBatchCopy || selection.count === 0) {
+      toast.error('请先选择要复制的文件');
+      return;
+    }
     setCopying(true);
     try {
-      // Build destination path
-      const targetSubPath = targetPath ? `${targetPath}/${copyTargetItem.Name}` : copyTargetItem.Name;
-      await copyJob(selectedRemote, copyTargetItem.Path, targetRemote, targetSubPath);
-      toast.success('后台复制任务已启动！可在“任务监控”中查看进度');
+      // 批量复制：逐项同步 copyfile
+      let success = 0;
+      let failed = 0;
+      for (const path of Array.from(selection.selected)) {
+        const item = files.find(f => f.Path === path);
+        const name = item?.Name ?? path.split('/').pop() ?? path;
+        const dstPath = targetPath ? `${targetPath}/${name}` : name;
+        try {
+          await copyFileItem(selectedRemote, path, targetRemote, dstPath);
+          success += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+      toast.success(t('Batch Done', { success, failed }));
+      selection.clear();
       setIsCopyDialogOpen(false);
+      setIsBatchCopy(false);
 
       // Dispatch configurations updated event to notify sidebar about potential stats/active counters
       window.dispatchEvent(new Event('rclone-configs-updated'));
+      handleRefresh();
     } catch {
       toast.error('启动复制任务失败，请检查路径');
     } finally {
@@ -229,6 +298,230 @@ export default function Explorer() {
     } catch {
       toast.error('生成公开链接失败，当前存储 Backend 可能不支持公开外链');
     }
+  };
+
+  // ===== Upload =====
+  const handleFilesSelected = (fileList: FileList | File[]) => {
+    const files = Array.from(fileList);
+    if (files.length === 0 || !selectedRemote) return;
+    const base = currentPath ? `${currentPath}/` : '';
+    uploadQueue.addFiles(files, selectedRemote, base);
+    setIsUploadOpen(true);
+    setDragOver(false);
+  };
+
+  // ===== Download =====
+  const handleDownloadFile = async (item: RcloneFileItem) => {
+    if (item.IsDir) {
+      await handleDownloadFolder(item);
+      return;
+    }
+    try {
+      const blob = await downloadFileBlob(selectedRemote, item.Path);
+      triggerBrowserDownload(blob, item.Name);
+      toast.success(t('Download'));
+    } catch {
+      toast.error(t('Download Failed'));
+    }
+  };
+
+  const handleDownloadFolder = async (item: RcloneFileItem) => {
+    const toastId = toast.loading(t('Packaging Progress', { done: 0, total: 0 }));
+    try {
+      const blob = await downloadItemsAsZip(
+        selectedRemote,
+        [{ path: item.Path, name: item.Name, size: item.Size, isDir: true }],
+        (done, total) => {
+          toast.loading(t('Packaging Progress', { done, total }), { id: toastId });
+        },
+      );
+      if (blob.size === 0) {
+        toast.info(t('Empty Folder No Download'), { id: toastId });
+        return;
+      }
+      triggerBrowserDownload(blob, `${item.Name}.zip`);
+      toast.success(t('Package Done'), { id: toastId });
+    } catch {
+      toast.error(t('Download Failed'), { id: toastId });
+    }
+  };
+
+  // ===== Move =====
+  const handleOpenMove = (item: RcloneFileItem) => {
+    setMoveTargetItem(item);
+    setIsMoveOpen(true);
+  };
+
+  const handleConfirmMove = async (target: MoveTarget) => {
+    if (!moveTargetItem) return;
+    setMoving(true);
+    try {
+      const dstRemote = target.path ? `${target.path}/${target.newName}` : target.newName;
+      await moveItem(selectedRemote, moveTargetItem.Path, target.remote, dstRemote);
+      toast.success(t('Move Success'));
+      setIsMoveOpen(false);
+      if (target.remote === selectedRemote) {
+        handleRefresh();
+      }
+    } catch {
+      toast.error(t('Move Failed'));
+    } finally {
+      setMoving(false);
+    }
+  };
+
+  // ===== Rename =====
+  const handleOpenRename = (item: RcloneFileItem) => {
+    setRenameTargetItem(item);
+    setIsRenameOpen(true);
+  };
+
+  const handleConfirmRename = async (newName: string) => {
+    if (!renameTargetItem) return;
+    setRenaming(true);
+    try {
+      await renameItem(selectedRemote, renameTargetItem.Path, newName);
+      toast.success(t('Rename Success'));
+      setIsRenameOpen(false);
+      handleRefresh();
+    } catch {
+      toast.error(t('Rename Failed'));
+    } finally {
+      setRenaming(false);
+    }
+  };
+
+  // ===== Directory Stats =====
+  const handleOpenSize = async (item: RcloneFileItem) => {
+    setSizeTargetPath(item.Path);
+    setSizeInfo(null);
+    setSizeLoading(true);
+    setIsSizeOpen(true);
+    try {
+      const info = await getDirectorySize(selectedRemote, item.Path);
+      setSizeInfo(info);
+    } catch {
+      toast.error('获取目录统计失败');
+    } finally {
+      setSizeLoading(false);
+    }
+  };
+
+  // ===== Batch operations =====
+  const handleOpenBatchDelete = () => {
+    setIsBatchDeleteOpen(true);
+  };
+
+  const handleConfirmBatchDelete = async () => {
+    const paths = Array.from(selection.selected);
+    if (paths.length === 0) return;
+    setBatchDeleting(true);
+    let success = 0;
+    let failed = 0;
+    for (const path of paths) {
+      const item = files.find(f => f.Path === path);
+      try {
+        if (item?.IsDir) {
+          await purgeDirectory(selectedRemote, path);
+        } else {
+          await deleteFile(selectedRemote, path);
+        }
+        success += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    toast.success(t('Batch Done', { success, failed }));
+    setIsBatchDeleteOpen(false);
+    selection.clear();
+    handleRefresh();
+    setBatchDeleting(false);
+  };
+
+  const handleBatchCopy = () => {
+    if (selection.count === 0) return;
+    setIsBatchCopy(true);
+    const defaultTarget = remotes.find(r => r.name !== selectedRemote)?.name || selectedRemote;
+    setTargetRemote(defaultTarget);
+    setTargetPath(currentPath);
+    setIsCopyDialogOpen(true);
+  };
+
+  const handleBatchDownload = async () => {
+    const paths = Array.from(selection.selected);
+    if (paths.length === 0) return;
+    const items = paths.map(path => {
+      const f = files.find(x => x.Path === path);
+      return { path, name: f?.Name ?? path, size: f?.Size ?? 0, isDir: f?.IsDir ?? false };
+    });
+    const toastId = toast.loading(t('Packaging Progress', { done: 0, total: 0 }));
+    try {
+      const blob = await downloadItemsAsZip(selectedRemote, items, (done, total) => {
+        toast.loading(t('Packaging Progress', { done, total }), { id: toastId });
+      });
+      if (blob.size === 0) {
+        toast.info(t('Empty Folder No Download'), { id: toastId });
+        return;
+      }
+      triggerBrowserDownload(blob, `${selectedRemote}-download.zip`);
+      toast.success(t('Package Done'), { id: toastId });
+      selection.clear();
+    } catch {
+      toast.error(t('Download Failed'), { id: toastId });
+    }
+  };
+
+  // ===== Search =====
+  const runSearch = async (keyword: string) => {
+    if (!selectedRemote) return;
+    const kw = keyword.trim();
+    if (kw.length < 2) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    try {
+      const { results, fallback } = await searchFiles(selectedRemote, kw, currentPath);
+      setSearchResults(results);
+      setSearchFallback(fallback);
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSearchInput = (value: string) => {
+    setSearchKeyword(value);
+    if (searchTimerRef.current) {
+      window.clearTimeout(searchTimerRef.current);
+    }
+    searchTimerRef.current = window.setTimeout(() => {
+      void runSearch(value);
+    }, 400);
+  };
+
+  const exitSearch = () => {
+    setSearchKeyword('');
+    setSearchResults([]);
+    setSearching(false);
+    setSearchFallback(false);
+    if (searchTimerRef.current) {
+      window.clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+    }
+  };
+
+  // 搜索结果定位：目录直接进入；文件进入所在目录
+  const handleSearchResultClick = (item: RcloneFileItem) => {
+    if (item.IsDir) {
+      setCurrentPath(item.Path);
+    } else {
+      const parent = item.Path.includes('/') ? item.Path.slice(0, item.Path.lastIndexOf('/')) : '';
+      setCurrentPath(parent);
+    }
+    exitSearch();
   };
 
   // Helper to format bytes to human readable sizes
@@ -269,6 +562,8 @@ export default function Explorer() {
             onValueChange={val => {
               setSelectedRemote(val);
               setCurrentPath('');
+              selection.clear();
+              exitSearch();
             }}>
             <SelectTrigger className="w-[180px] font-medium">
               <SelectValue placeholder="选择存储源" />
@@ -322,6 +617,49 @@ export default function Explorer() {
 
             {/* Action buttons */}
             <div className="flex items-center justify-end gap-2.5">
+              {/* Search input */}
+              <div className="relative">
+                <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
+                <Input
+                  value={searchKeyword}
+                  onChange={e => handleSearchInput(e.target.value)}
+                  placeholder={t('Search Placeholder')}
+                  className="h-8 w-44 pr-7 pl-8 text-xs sm:w-56"
+                />
+                {searchKeyword && (
+                  <button
+                    type="button"
+                    onClick={exitSearch}
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer"
+                    aria-label={t('Clear') ?? 'clear'}>
+                    <X className="size-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Upload button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!selectedRemote || loading}
+                className="h-8 cursor-pointer rounded-lg">
+                <Upload className="mr-2 size-3.5" />
+                {t('Upload')}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={e => {
+                  if (e.target.files) {
+                    handleFilesSelected(e.target.files);
+                    e.target.value = '';
+                  }
+                }}
+              />
+
               {/* View mode toggle */}
               <div className="border-border/50 bg-background flex items-center rounded-lg border p-0.5 shadow-sm">
                 <Button
@@ -365,7 +703,25 @@ export default function Explorer() {
         </CardHeader>
 
         {/* File explorer content */}
-        <CardContent className="flex min-h-[400px] flex-col justify-between p-0">
+        <CardContent
+          className="relative flex min-h-[400px] flex-col justify-between p-0"
+          onDragOver={e => {
+            if (!selectedRemote) return;
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={e => {
+            if (!selectedRemote) return;
+            e.preventDefault();
+            handleFilesSelected(e.dataTransfer.files);
+          }}>
+          {dragOver && (
+            <div className="bg-primary/10 absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 backdrop-blur-[2px]">
+              <Upload className="text-primary size-12" />
+              <span className="text-primary text-lg font-bold">{t('Drag Upload Active')}</span>
+            </div>
+          )}
           {loading ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20">
               <Loader2 className="text-primary size-8 animate-spin" />
@@ -376,10 +732,76 @@ export default function Explorer() {
               <AlertTriangle className="size-10 text-amber-500/80" />
               <span className="text-sm font-semibold">请先在右上角选择一个远程存储配置。</span>
             </div>
+          ) : searchKeyword.trim() ? (
+            /* Search Results View */
+            <div className="flex flex-1 flex-col">
+              <div className="bg-muted/20 text-muted-foreground flex flex-wrap items-center gap-2 border-b px-6 py-2.5 text-xs font-semibold">
+                <Search className="size-3.5" />
+                {searching
+                  ? t('Search') + '…'
+                  : t('Search Summary', { keyword: searchKeyword.trim(), count: searchResults.length })}
+                {searchFallback && !searching && <span className="text-amber-500">⚠ {t('Local Filter Fallback')}</span>}
+              </div>
+
+              {searching ? (
+                <div className="flex flex-1 items-center justify-center gap-3 py-20">
+                  <Loader2 className="text-primary size-7 animate-spin" />
+                  <span className="text-muted-foreground text-sm font-semibold">{t('Search')}…</span>
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2.5 py-20">
+                  <Search className="size-10 opacity-40" />
+                  <span className="text-sm font-semibold">{t('Search Empty')}</span>
+                </div>
+              ) : (
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full border-collapse text-left text-sm">
+                    <thead>
+                      <tr className="border-border/40 bg-muted/20 text-muted-foreground border-b font-semibold">
+                        <th className="p-3 pl-6">{t('Name')}</th>
+                        <th className="p-3">{t('Size')}</th>
+                        <th className="p-3">{t('Type')}</th>
+                        <th className="p-3 pr-6 text-right">{t('Last Modified')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-border/20 divide-y">
+                      {searchResults.map(item => (
+                        <tr
+                          key={item.Path}
+                          onClick={() => handleSearchResultClick(item)}
+                          className="hover:bg-muted/30 group cursor-pointer transition-colors">
+                          <td className="max-w-[320px] truncate p-3 pl-6 font-semibold">
+                            <div className="text-foreground flex items-center">
+                              {item.IsDir ? (
+                                <Folder className="fill-primary/10 text-primary mr-2.5 size-4.5 shrink-0" />
+                              ) : (
+                                <File className="text-muted-foreground mr-2.5 size-4.5 shrink-0" />
+                              )}
+                              <span className="truncate">{item.Name}</span>
+                            </div>
+                            <p className="text-muted-foreground mt-0.5 truncate font-mono text-[10px]">{item.Path}</p>
+                          </td>
+                          <td className="text-muted-foreground p-3 font-mono text-xs">
+                            {item.IsDir ? '-' : formatBytes(item.Size)}
+                          </td>
+                          <td className="text-muted-foreground p-3 text-xs font-semibold">
+                            {item.IsDir ? 'Directory' : item.MimeType || 'Unknown'}
+                          </td>
+                          <td className="text-muted-foreground p-3 pr-6 text-right text-xs">
+                            {formatDate(item.ModTime)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           ) : files.length === 0 ? (
             <div className="text-muted-foreground/60 flex flex-1 flex-col items-center justify-center gap-2.5 py-20 italic">
               <Folder className="text-muted-foreground size-12 opacity-40" />
               <span className="text-sm font-semibold">该目录为空</span>
+              <span className="text-xs">💡 {t('Drag Upload Hint')}</span>
             </div>
           ) : viewMode === 'list' ? (
             /* List View */
@@ -387,8 +809,25 @@ export default function Explorer() {
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-border/40 bg-muted/20 text-muted-foreground border-b font-semibold">
-                    <th className="p-3.5 pl-6">{t('Name')}</th>
-
+                    <th className="w-10 p-3.5 pl-6">
+                      <Checkbox
+                        checked={
+                          selection.isAllSelected(files.map(f => f.Path))
+                            ? true
+                            : selection.isIndeterminate(files.map(f => f.Path))
+                              ? 'indeterminate'
+                              : false
+                        }
+                        onCheckedChange={checked =>
+                          selection.toggleAll(
+                            files.map(f => f.Path),
+                            checked === true,
+                          )
+                        }
+                        aria-label="select all"
+                      />
+                    </th>
+                    <th className="p-3.5">{t('Name')}</th>
                     <th className="p-3.5">{t('Size')}</th>
                     <th className="p-3.5">{t('Type')}</th>
                     <th className="p-3.5">{t('Last Modified')}</th>
@@ -397,8 +836,17 @@ export default function Explorer() {
                 </thead>
                 <tbody className="divide-border/20 divide-y">
                   {files.map(item => (
-                    <tr key={item.Path} className="hover:bg-muted/30 group transition-colors">
-                      <td className="max-w-[280px] truncate p-3 pl-6 font-semibold">
+                    <tr
+                      key={item.Path}
+                      className={`hover:bg-muted/30 group transition-colors ${selection.isSelected(item.Path) ? 'bg-primary/5' : ''}`}>
+                      <td className="w-10 p-3 pl-6">
+                        <Checkbox
+                          checked={selection.isSelected(item.Path)}
+                          onCheckedChange={() => selection.toggle(item.Path)}
+                          aria-label={`select ${item.Name}`}
+                        />
+                      </td>
+                      <td className="max-w-[280px] truncate p-3 font-semibold">
                         {item.IsDir ? (
                           <button
                             type="button"
@@ -422,7 +870,15 @@ export default function Explorer() {
                       </td>
                       <td className="text-muted-foreground p-3 text-xs">{formatDate(item.ModTime)}</td>
                       <td className="p-3 pr-6 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title={t('Download')}
+                            onClick={() => void handleDownloadFile(item)}
+                            className="text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 w-8 cursor-pointer rounded-lg">
+                            <Download className="size-3.5" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -434,11 +890,29 @@ export default function Explorer() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="备份同步至其他存储"
-                            onClick={() => handleOpenCopyDialog(item)}
+                            title={t('Move')}
+                            onClick={() => handleOpenMove(item)}
                             className="text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 w-8 cursor-pointer rounded-lg">
-                            <Copy className="size-3.5" />
+                            <MoveRight className="size-3.5" />
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title={t('Rename')}
+                            onClick={() => handleOpenRename(item)}
+                            className="text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 w-8 cursor-pointer rounded-lg">
+                            <Pencil className="size-3.5" />
+                          </Button>
+                          {item.IsDir && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title={t('Statistic')}
+                              onClick={() => void handleOpenSize(item)}
+                              className="text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 w-8 cursor-pointer rounded-lg">
+                              <BarChart3 className="size-3.5" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -460,8 +934,27 @@ export default function Explorer() {
               {files.map(item => (
                 <div
                   key={item.Path}
-                  className="group border-border/40 hover:border-primary/40 hover:bg-muted/20 relative flex min-h-[140px] flex-col justify-between rounded-xl border p-4 text-center transition-all duration-300 hover:shadow-md">
+                  className={`group border-border/40 hover:border-primary/40 hover:bg-muted/20 relative flex min-h-[140px] flex-col justify-between rounded-xl border p-4 text-center transition-all duration-300 hover:shadow-md ${
+                    selection.isSelected(item.Path) ? 'border-primary/60 bg-primary/5' : ''
+                  }`}>
+                  {/* Selection checkbox */}
+                  <div className="absolute top-2 left-2">
+                    <Checkbox
+                      checked={selection.isSelected(item.Path)}
+                      onCheckedChange={() => selection.toggle(item.Path)}
+                      aria-label={`select ${item.Name}`}
+                      className="opacity-60 hover:opacity-100"
+                    />
+                  </div>
                   <div className="bg-background/95 border-border/40 absolute top-2 right-2 flex items-center gap-0.5 rounded-lg border p-0.5 opacity-0 shadow-sm transition-opacity duration-200 group-hover:opacity-100">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title={t('Download')}
+                      onClick={() => void handleDownloadFile(item)}
+                      className="text-muted-foreground hover:text-primary h-7 w-7 cursor-pointer rounded-md">
+                      <Download className="size-3" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -473,10 +966,10 @@ export default function Explorer() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="备份同步至其他存储"
-                      onClick={() => handleOpenCopyDialog(item)}
+                      title={t('Move')}
+                      onClick={() => handleOpenMove(item)}
                       className="text-muted-foreground hover:text-primary h-7 w-7 cursor-pointer rounded-md">
-                      <Copy className="size-3" />
+                      <MoveRight className="size-3" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -570,9 +1063,13 @@ export default function Explorer() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-bold">
               <Copy className="text-primary size-5" />
-              {t('Transfer Setup')}
+              {isBatchCopy ? t('Batch Copy') : t('Transfer Setup')}
             </DialogTitle>
-            <DialogDescription>选择目标存储云盘与路径，在后台开启文件的复制备份任务。</DialogDescription>
+            <DialogDescription>
+              {isBatchCopy
+                ? t('Selected Count', { count: selection.count })
+                : '选择目标存储云盘与路径，在后台开启文件的复制备份任务。'}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -583,7 +1080,9 @@ export default function Explorer() {
               </div>
               <div className="flex items-center justify-between">
                 <span>源路径:</span>
-                <span className="text-foreground max-w-[280px] truncate font-bold">{copyTargetItem?.Path || '/'}</span>
+                <span className="text-foreground max-w-[280px] truncate font-bold">
+                  {isBatchCopy ? t('Selected Count', { count: selection.count }) : currentPath || '/'}
+                </span>
               </div>
             </div>
 
@@ -726,6 +1225,104 @@ export default function Explorer() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Upload Queue Sheet */}
+      <UploadQueueSheet
+        open={isUploadOpen}
+        onOpenChange={setIsUploadOpen}
+        tasks={uploadQueue.tasks}
+        stats={uploadQueue.stats}
+        onCancel={uploadQueue.cancel}
+        onRetry={uploadQueue.retry}
+        onClearFinished={uploadQueue.clearFinished}
+      />
+
+      {/* Move Dialog */}
+      <MoveDialog
+        open={isMoveOpen}
+        onOpenChange={setIsMoveOpen}
+        targetItem={moveTargetItem}
+        currentRemote={selectedRemote}
+        currentPath={currentPath}
+        remotes={remotes}
+        submitting={moving}
+        onSubmit={target => {
+          void handleConfirmMove(target);
+        }}
+      />
+
+      {/* Rename Dialog */}
+      <RenameDialog
+        open={isRenameOpen}
+        onOpenChange={setIsRenameOpen}
+        targetItem={renameTargetItem}
+        submitting={renaming}
+        onSubmit={name => {
+          void handleConfirmRename(name);
+        }}
+      />
+
+      {/* Size Dialog */}
+      <SizeDialog
+        open={isSizeOpen}
+        onOpenChange={setIsSizeOpen}
+        targetPath={sizeTargetPath}
+        loading={sizeLoading}
+        info={sizeInfo}
+      />
+
+      {/* Batch Delete Confirmation */}
+      <Dialog open={isBatchDeleteOpen} onOpenChange={setIsBatchDeleteOpen}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-bold">
+              <AlertTriangle className="text-destructive size-5" />
+              {t('Delete Batch Confirm Title')}
+            </DialogTitle>
+            <DialogDescription>{t('Delete Batch Confirm Msg', { count: selection.count })}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsBatchDeleteOpen(false)}
+              disabled={batchDeleting}
+              className="cursor-pointer">
+              {t('Cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => {
+                void handleConfirmBatchDelete();
+              }}
+              disabled={batchDeleting}
+              className="cursor-pointer font-bold">
+              {batchDeleting ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  {t('config.deleting')}
+                </>
+              ) : (
+                t('Delete')
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Batch action bar */}
+      {selection.count > 0 && (
+        <BatchActionBar
+          count={selection.count}
+          onDelete={handleOpenBatchDelete}
+          onCopy={handleBatchCopy}
+          onDownload={() => {
+            void handleBatchDownload();
+          }}
+          onClear={selection.clear}
+        />
+      )}
     </div>
   );
 }
