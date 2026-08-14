@@ -27,7 +27,7 @@ RcloneX 是一个基于 Rclone Remote Control (RC) API 的现代化 Web UI 管�
 | **主题切换**        | next-themes                | 亮色/暗色模式切换                                      |
 | **代码规范**        | oxlint + oxfmt             | 包含代码 Lint 校验与极速代码格式化                     |
 | **测试框架**        | Vitest                     | 单元测试与集成测试                                     |
-| **工具链/包管理器** | nub (pnpm 兼容模式)        | 现代一站式开发工具链，管理依赖、运行脚本及版本控制     |
+| **工具链/包管理器** | pnpm 11.x                  | 依赖安装、脚本执行与版本锁定（锁文件 pnpm-lock.yaml）  |
 
 ### 路径别名配置
 
@@ -77,33 +77,33 @@ src/
 
 ## 3. 开发命令指南
 
-在开发调试或代码提交前，需通过 nub 执行以下命令：
+在开发调试或代码提交前，需通过 pnpm 执行以下命令：
 
 ```bash
 # 启动开发服务器（自动打开浏览器，端口默认为 3000）
-nub run dev
+pnpm run dev
 
 # 执行生产打包编译
-nub run build
+pnpm run build
 
 # 本地预览打包后的生产产物
-nub run preview
+pnpm run preview
 
 # 启动本地 Rclone 模拟测试环境
-nub run start:rclone
+pnpm run start:rclone
 # 备注：实际执行命令为: rclone rcd --rc-addr :5572 --rc-user dev --rc-pass 1234 --rc-allow-origin http://localhost:3000
 
 # 运行 Vitest 进行单元与集成测试（单次运行模式）
-nub run test
+pnpm run test
 
 # 验证 TypeScript 类型安全性
-nub run check
+pnpm run check
 
 # 运行 oxfmt 自动格式化项目代码
-nub run fmt
+pnpm run fmt
 
 # 运行 oxlint 进行代码 Lint 静态检查
-nub run lint
+pnpm run lint
 ```
 
 ---
@@ -118,10 +118,10 @@ nub run lint
 
 任何时候只要你修改了代码，**必须依次运行**以下命令确保项目格式与类型无误：
 
-1. `nub run lint`：通过 oxlint 进行静态代码 Lint 检查。
-2. `nub run fmt`：通过 oxfmt 进行代码排版格式化。
-3. `nub run check`：验证没有 TypeScript 类型编译错误。
-4. `nub run test`：运行所有单元测试，保证未引入回归 Bug。
+1. `pnpm run lint`：通过 oxlint 进行静态代码 Lint 检查。
+2. `pnpm run fmt`：通过 oxfmt 进行代码排版格式化。
+3. `pnpm run check`：验证没有 TypeScript 类型编译错误。
+4. `pnpm run test`：运行所有单元测试，保证未引入回归 Bug。
 
 ### 🎨 组件与页面开发规范
 

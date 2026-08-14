@@ -97,7 +97,7 @@ RcloneX leverages the latest cutting-edge web ecosystem for maximum performance 
 
 ### 1. Prerequisites
 
-Ensure you have **Node.js (v24.x)** and the **nub** modern package manager installed.
+Ensure you have **Node.js (v24.x)** and the **pnpm** package manager installed.
 
 ### 2. Clone & Install
 
@@ -107,7 +107,7 @@ git clone https://github.com/hurole/RcloneX.git
 cd RcloneX
 
 # Install dependencies
-nub install
+pnpm install
 ```
 
 ### 3. Start Local Rclone Backend (Mock / Dev Mode)
@@ -116,7 +116,7 @@ Make sure Rclone is installed on your system, then start the RC daemon:
 
 ```bash
 # Launch Rclone RC daemon
-nub run start:rclone
+pnpm run start:rclone
 ```
 
 > 💡 **Info:**
@@ -127,7 +127,7 @@ nub run start:rclone
 In a new terminal window, start RcloneX:
 
 ```bash
-nub run dev
+pnpm run dev
 ```
 
 Open `http://localhost:3000` in your browser. Use the following default test credentials to log in:
@@ -172,17 +172,17 @@ src/
 
 ### Available Scripts
 
-Run scripts using `nub`:
+Run scripts using `pnpm`:
 
-| Command               | Description                               | Notes                           |
-| :-------------------- | :---------------------------------------- | :------------------------------ |
-| **`nub run dev`**     | Start dev server with HMR                 | Port 3000                       |
-| **`nub run lint`**    | Run **`oxlint`** for fast static analysis | Ensures clean syntax            |
-| **`nub run fmt`**     | Run **`oxfmt`** to format code            | Uses `@fka/oxfmt-config`        |
-| **`nub run check`**   | Run **`tsc`** for TypeScript typechecking | Zero type errors                |
-| **`nub run test`**    | Run **`Vitest`** test suite               | Runs unit and integration tests |
-| **`nub run build`**   | Build production bundle                   | Optimized static bundle         |
-| **`nub run preview`** | Preview production build locally          | Test prod build locally         |
+| Command                | Description                               | Notes                           |
+| :--------------------- | :---------------------------------------- | :------------------------------ |
+| **`pnpm run dev`**     | Start dev server with HMR                 | Port 3000                       |
+| **`pnpm run lint`**    | Run **`oxlint`** for fast static analysis | Ensures clean syntax            |
+| **`pnpm run fmt`**     | Run **`oxfmt`** to format code            | Uses `@fka/oxfmt-config`        |
+| **`pnpm run check`**   | Run **`tsc`** for TypeScript typechecking | Zero type errors                |
+| **`pnpm run test`**    | Run **`Vitest`** test suite               | Runs unit and integration tests |
+| **`pnpm run build`**   | Build production bundle                   | Optimized static bundle         |
+| **`pnpm run preview`** | Preview production build locally          | Test prod build locally         |
 
 ---
 
@@ -193,7 +193,7 @@ Contributions, issues, and feature requests are welcome! Feel free to check out 
 Before submitting a Pull Request, please ensure all checks pass:
 
 ```bash
-nub run lint && nub run fmt && nub run check && nub run test
+pnpm run lint && pnpm run fmt && pnpm run check && pnpm run test
 ```
 
 ---
