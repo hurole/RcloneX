@@ -169,10 +169,10 @@
 
 **重要说明（rclone v1.69 实测）**：rclone RC **没有通用下载接口**（`operations/downloadfile` / `operations/cat` 均不存在）。本实现采用**双层策略**：
 
-| 策略 | 触发条件 | 实现 |
-| :--- | :--- | :--- |
-| A. publiclink | backend 支持（Drive/S3 等云盘） | `operations/publiclink` 获取链接 → `fetch` 下载 |
-| B. 临时 serve http | publiclink 不可用（local 等） | `core/command` 异步启动 `rclone serve http`（随机端口 + `--read-only` + `--allow-origin *`）→ 从端口下载 → `job/stop` 停止 |
+| 策略               | 触发条件                        | 实现                                                                                                                       |
+| :----------------- | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------- |
+| A. publiclink      | backend 支持（Drive/S3 等云盘） | `operations/publiclink` 获取链接 → `fetch` 下载                                                                            |
+| B. 临时 serve http | publiclink 不可用（local 等）   | `core/command` 异步启动 `rclone serve http`（随机端口 + `--read-only` + `--allow-origin *`）→ 从端口下载 → `job/stop` 停止 |
 
 **目录/批量打包**：复用**单个**临时 serve 服务下载全部文件（并发 3），避免逐文件启停服务。
 
@@ -186,7 +186,11 @@
 **接口 B：临时 serve（兜底）**：`POST {rclone_rc}/core/command`
 
 ```json
-{ "command": "serve", "arg": ["http", "--addr", "127.0.0.1:4xxxx", "drive:", "--read-only", "--allow-origin", "*"], "_async": true }
+{
+  "command": "serve",
+  "arg": ["http", "--addr", "127.0.0.1:4xxxx", "drive:", "--read-only", "--allow-origin", "*"],
+  "_async": true
+}
 ```
 
 返回 `{ "jobid": N }`；随后 `GET http://127.0.0.1:4xxxx/{remote}` 下载；最后 `POST /job/stop`（body `{ "jobid": N }`）清理。
@@ -203,10 +207,10 @@
 
 #### 4.2.5 设计决策说明
 
-| 方案                | 说明                                                   | 结论                                                                 |
-| :------------------ | :----------------------------------------------------- | :------------------------------------------------------------------- |
-| A. 前端递归 + JSZip | 逐文件下载（并发 3）→ 写入 zip → 浏览器保存            | ✅ **主方案**：无额外服务依赖、进度可控                              |
-| B. serve http zip   | 临时 `serve/http` + `?zip` 参数                        | ⚠️ 备选：RC 环境通常无 serve 模块；本期以 `core/command` 临时 serve 作为下载兜底 |
+| 方案                | 说明                                        | 结论                                                                             |
+| :------------------ | :------------------------------------------ | :------------------------------------------------------------------------------- |
+| A. 前端递归 + JSZip | 逐文件下载（并发 3）→ 写入 zip → 浏览器保存 | ✅ **主方案**：无额外服务依赖、进度可控                                          |
+| B. serve http zip   | 临时 `serve/http` + `?zip` 参数             | ⚠️ 备选：RC 环境通常无 serve 模块；本期以 `core/command` 临时 serve 作为下载兜底 |
 
 **约束**：方案 A 对大目录（>2GB）耗时长，仅以二次确认兜底；失败文件跳过并计入汇总（"成功 X / 失败 Y（已跳过）"）。
 
@@ -521,24 +525,24 @@ explorer.overwriteConfirm / explorer.deleteConfirmBatch / explorer.cancel / expl
 
 ## 6. 非功能需求
 
-| 维度     | 要求                                                                                                                               |
-| :------- | :--------------------------------------------------------------------------------------------------------------------------------- |
+| 维度     | 要求                                                                                                                                                     |
+| :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 兼容性   | 目标 rclone v1.66+；`operations/uploadfile`/`moveto`/`size`/`core/command` 均需 v1.54+；下载依赖 `operations/publiclink` 或 `core/command`（serve 兜底） |
-| 性能     | 千级文件目录列表流畅；上传队列 50 任务不卡顿（虚拟化可选）                                                                         |
-| 可测试性 | services 层全部可 mock `net` 单测；hooks 有独立测试                                                                                |
-| 可访问性 | 操作按钮带 `title`/`aria-label`；对话框可 ESC 关闭                                                                                 |
+| 性能     | 千级文件目录列表流畅；上传队列 50 任务不卡顿（虚拟化可选）                                                                                               |
+| 可测试性 | services 层全部可 mock `net` 单测；hooks 有独立测试                                                                                                      |
+| 可访问性 | 操作按钮带 `title`/`aria-label`；对话框可 ESC 关闭                                                                                                       |
 
 ---
 
 ## 7. 测试计划
 
-| 层级              | 覆盖                                                                                                                                                                                                                                            |
-| :---------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 层级              | 覆盖                                                                                                                                                                             |
+| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **services 单测** | `uploadFile`（query 参数构造、进度回调、错误冒泡）、`moveItem`/`renameItem`（参数拼接）、`searchFiles`（filter 构造 + 降级分支）、`getDirectorySize`（响应解析）、`copyFileItem` |
-| **transfer 单测** | 上传（query + multipart）、下载（publiclink 优先 → serve 兜底）、打包（目录展开 + 单 serve 复用 + 空目录）、`triggerBrowserDownload` |
-| **hooks 单测** | `use-upload-queue`（并发上限、取消、失败重试、完成汇总、防覆盖）、`use-selection`（toggle/all/clear/indeterminate） |
-| **组件测试**      | `UploadQueueSheet`（渲染队列、进度、重试）、`BatchActionBar`（选择计数、按钮态）、`RenameDialog`（非法名称校验）、`MoveDialog`（覆盖确认流）                                                                                                    |
-| **手工验收**      | 按 §4 各 AC 清单执行；需本地 `pnpm run start:rclone` 起模拟 rcd                                                                                                                                                                                 |
+| **transfer 单测** | 上传（query + multipart）、下载（publiclink 优先 → serve 兜底）、打包（目录展开 + 单 serve 复用 + 空目录）、`triggerBrowserDownload`                                             |
+| **hooks 单测**    | `use-upload-queue`（并发上限、取消、失败重试、完成汇总、防覆盖）、`use-selection`（toggle/all/clear/indeterminate）                                                              |
+| **组件测试**      | `UploadQueueSheet`（渲染队列、进度、重试）、`BatchActionBar`（选择计数、按钮态）、`RenameDialog`（非法名称校验）、`MoveDialog`（覆盖确认流）                                     |
+| **手工验收**      | 按 §4 各 AC 清单执行；需本地 `pnpm run start:rclone` 起模拟 rcd                                                                                                                  |
 
 ---
 

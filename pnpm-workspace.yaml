@@ -1,0 +1,2 @@
+minimumReleaseAgeExclude:
+  - '@fka/oxfmt-config@0.1.3'
